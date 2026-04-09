@@ -49,25 +49,25 @@ const STROKE_META = {
 const STROKE_DRILLS = {
   back: {
     drills: [
-      { name: "Kick on back — no board", sets: "2 ×", reps: "25m · 15s rest" },
-      { name: "3-stroke / 6-kick", sets: "2 ×", reps: "25m · 15s rest" },
-      { name: "Full backstroke — technical", sets: "6 ×", reps: "50m · 20s rest" },
+      { name: "Kick on back — no board", sets: "2 ×", reps: "25m" },
+      { name: "3-stroke / 6-kick", sets: "2 ×", reps: "25m" },
+      { name: "Full backstroke — technical", sets: "6 ×", reps: "50m" },
     ],
     cues: ["Ears in water, eyes to ceiling", "Hips rotate to pulling side", "Exit thumb-first, enter pinky-first", "Kick from hip — loose ankles"],
   },
   breast: {
     drills: [
-      { name: "2-kick / 1-pull drill", sets: "4 ×", reps: "25m · 15s rest" },
-      { name: "Full breaststroke — rhythm focus", sets: "6 ×", reps: "50m · 20s rest" },
+      { name: "2-kick / 1-pull drill", sets: "4 ×", reps: "25m" },
+      { name: "Full breaststroke — rhythm focus", sets: "6 ×", reps: "50m" },
     ],
     cues: ["Pull → breathe → kick → GLIDE", "Keep pull inside shoulders", "Heels to backside, then whip", "Glide until you feel deceleration"],
   },
   fly: {
     drills: [
-      { name: "Dolphin kick on front (arms by sides)", sets: "4 ×", reps: "25m · 15s rest" },
-      { name: "Dolphin kick on back", sets: "4 ×", reps: "25m · 15s rest" },
-      { name: "Single-arm butterfly", sets: "4 ×", reps: "25m each · 15s rest" },
-      { name: "Body dolphin (no arms)", sets: "4 ×", reps: "25m · 15s rest" },
+      { name: "Dolphin kick on front (arms by sides)", sets: "4 ×", reps: "25m" },
+      { name: "Dolphin kick on back", sets: "4 ×", reps: "25m" },
+      { name: "Single-arm butterfly", sets: "4 ×", reps: "25m each" },
+      { name: "Body dolphin (no arms)", sets: "4 ×", reps: "25m" },
     ],
     cues: ["Two kicks per arm cycle", "Breathe late and low — chin skims water", "Wave starts from chest, not hips", "Stop if shoulders hurt — back to drills"],
   },
@@ -98,13 +98,13 @@ function buildSession(day) {
       { name: "Scapular ring hang", sets: "1 ×", reps: "20–30 sec" },
       { name: "Bodyweight push-up", sets: "1 ×", reps: "10 reps — slow, full range" },
       { name: "── MAIN SESSION ──", divider: true, sets: "💪", reps: "PUSH / PULL / CORE" },
-      { name: "Ring Push-Up (feet elevated)", sets: "4", reps: "10–12 · 60–90s rest" },
-      { name: "Ring Row", sets: "4", reps: "10–12 · 60–90s rest" },
-      { name: "KB Press single arm · 16kg", sets: "3", reps: "8 each · 90s rest" },
-      { name: "KB Bent-Over Row · 20kg", sets: "3", reps: "10 each · 90s rest" },
-      { name: "Ring Body Saw", sets: "3", reps: "30 sec · 60s rest" },
-      { name: "KB Windmill · 16kg", sets: "3", reps: "6 each · 60–90s rest" },
-      { name: "Skipping — double unders", sets: "3", reps: "30 sec · 90s between rounds" },
+      { name: "Ring Push-Up (feet elevated)", sets: "4", reps: "10–12" },
+      { name: "Ring Row", sets: "4", reps: "10–12" },
+      { name: "KB Press single arm · 16kg", sets: "3", reps: "8 each" },
+      { name: "KB Bent-Over Row · 20kg", sets: "3", reps: "10 each" },
+      { name: "Ring Body Saw", sets: "3", reps: "30 sec" },
+      { name: "KB Windmill · 16kg", sets: "3", reps: "6 each" },
+      { name: "Skipping — double unders", sets: "3", reps: "30 sec" },
     ],
   };
 
@@ -113,7 +113,7 @@ function buildSession(day) {
     title: "Zone 2 Endurance (Zwift)",
     exercises: [
       { name: "Warm-up easy spin", sets: "1", reps: "10 min" },
-      { name: "Zone 2 steady — RPE 5–6", sets: "1", reps: "50–60 min · continuous" },
+      { name: "Zone 2 steady — RPE 5–6", sets: "1", reps: "50–60 min" },
       { name: "Cool-down", sets: "1", reps: "5 min" },
     ],
   };
@@ -126,24 +126,24 @@ function buildSession(day) {
     const isFly = stroke === "fly";
     const showFullFly = isFly && week >= 3;
     const fullFlySet = week <= 4
-      ? [{ name: "Full butterfly", sets: "4 ×", reps: "25m · 30–45s rest" }]
+      ? [{ name: "Full butterfly", sets: "4 ×", reps: "25m — 30s rest each" }]
       : week <= 8
-      ? [{ name: "Full butterfly", sets: "6 ×", reps: "25m + 2 × 50m broken · 30–45s rest" }]
-      : [{ name: "Full butterfly", sets: "4 ×", reps: "50m · full rest between" }];
+      ? [{ name: "Full butterfly", sets: "6 ×", reps: "25m + 2 × 50m broken" }]
+      : [{ name: "Full butterfly", sets: "4 ×", reps: "50m — quality, full rest" }];
     return {
       type: "swimming", emoji: "🏊", label: "Swimming", color: "#00FF9D", bg: "#00150a",
       title: `Technique — Freestyle + ${meta.name}`,
       strokeFocus: meta.name, strokeEmoji: meta.emoji,
       flyStatus: isFly ? flyStatus : null,
       exercises: [
-        { name: "Warm-up freestyle", sets: "4 ×", reps: `50m · Z1 ${PACE.z1} · 15s rest` },
-        { name: "Catch-up / fingertip drag (alt.)", sets: "4 ×", reps: "25m · easy · 15s rest" },
-        { name: "Pull buoy freestyle", sets: "4 ×", reps: `50m · Z2 ${PACE.z2} · 20s rest` },
+        { name: "Warm-up freestyle", sets: "4 ×", reps: `50m · Z1 ${PACE.z1}` },
+        { name: "Catch-up / fingertip drag (alt.)", sets: "4 ×", reps: "25m · easy" },
+        { name: "Pull buoy freestyle", sets: "4 ×", reps: `50m · Z2 ${PACE.z2}` },
         { name: "── STROKE FOCUS ──", divider: true, sets: meta.emoji, reps: meta.name.toUpperCase() },
         ...drills.drills,
         ...(isFly && !showFullFly ? [{ name: "Full stroke: next session — drills only today", sets: "—", reps: "" }] : []),
         ...(showFullFly ? fullFlySet : []),
-        { name: "Main set freestyle", sets: "4 ×", reps: `100m · Z3 ${PACE.z3} · 20s rest` },
+        { name: "Main set freestyle", sets: "4 ×", reps: `100m · Z3 ${PACE.z3}` },
         { name: "Cool-down", sets: "1 ×", reps: `100–200m · Z1 ${PACE.z1}` },
       ],
       strokeCues: drills.cues,
@@ -160,13 +160,13 @@ function buildSession(day) {
       { name: "Bodyweight squat", sets: "1 ×", reps: "15 reps — slow, full depth" },
       { name: "KB Romanian Deadlift (light)", sets: "1 ×", reps: "10 reps · 16kg — primer set" },
       { name: "── MAIN SESSION ──", divider: true, sets: "💪", reps: "LOWER BODY + CONDITIONING" },
-      { name: "KB Goblet Squat · 20kg", sets: "4", reps: "12 · 90s rest" },
-      { name: "KB Romanian Deadlift · 20kg", sets: "4", reps: "10 · 90s rest" },
-      { name: "KB Single-Leg Deadlift · 16kg", sets: "3", reps: "8 each · 90s rest" },
-      { name: "KB Swing two-hand · 20kg", sets: "4", reps: "20 · 60–90s rest" },
-      { name: "Ring Assisted Pistol Squat", sets: "3", reps: "5 each · 90s rest" },
-      { name: "KB Turkish Get-Up · 16kg", sets: "3", reps: "3 each · rest as needed" },
-      { name: "Finisher: 20 swings + 30s skip + 10 rows", sets: "3 rounds", reps: "90s between rounds" },
+      { name: "KB Goblet Squat · 20kg", sets: "4", reps: "12" },
+      { name: "KB Romanian Deadlift · 20kg", sets: "4", reps: "10" },
+      { name: "KB Single-Leg Deadlift · 16kg", sets: "3", reps: "8 each" },
+      { name: "KB Swing two-hand · 20kg", sets: "4", reps: "20" },
+      { name: "Ring Assisted Pistol Squat", sets: "3", reps: "5 each" },
+      { name: "KB Turkish Get-Up · 16kg", sets: "3", reps: "3 each" },
+      { name: "Finisher: 20 swings + 30s skip + 10 rows", sets: "3 rounds", reps: "" },
     ],
   };
 
@@ -193,8 +193,8 @@ function buildSession(day) {
       title: `Endurance${hasIM ? " + IM Block" : ""}`,
       exercises: [
         { name: "Warm-up freestyle", sets: "1 ×", reps: `200m · Z1 ${PACE.z1}` },
-        { name: "Pyramid", sets: "1 ×", reps: `50/100/150/200/150/100/50m · Z2 ${PACE.z2} · 20s rest` },
-        { name: "Main set freestyle", sets: hasIM ? "6 ×" : "8 ×", reps: `100m · Z3 ${PACE.z3} · 20s rest` },
+        { name: "Pyramid", sets: "1 ×", reps: `50/100/150/200/150/100/50m · Z2 ${PACE.z2}` },
+        { name: "Main set freestyle", sets: hasIM ? "6 ×" : "8 ×", reps: `100m · Z3 ${PACE.z3} · 15s rest` },
         ...(hasIM ? [
           { name: "── IM BLOCK ──", divider: true, sets: "🔁", reps: imReps },
           { name: "25m Butterfly", sets: "", reps: `easy · Z1 ${PACE.z1}` },
