@@ -496,23 +496,43 @@ export default function App() {
                 );
               })}
             </div>
-            <div style={{ background: "#00150a", borderRadius: 14, padding: 16, border: "1px solid #00FF9D22" }}>
-              <div style={{ fontSize: 11, letterSpacing: 3, color: "#00FF9D", fontFamily: "Barlow,sans-serif", textTransform: "uppercase", marginBottom: 12 }}>Wednesday (Day 3) Stroke Rotation</div>
-              {Array.from({ length: 12 }, (_, i) => {
-                const week = i + 1; const techDay = (week - 1) * 6 + 3;
-                const stroke = strokeForSwimTech(techDay); const meta = STROKE_META[stroke];
-                const isCurrent = week === currentWeek; const isPast = week < currentWeek;
-                return (
-                  <div key={week} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: week < 12 ? "1px solid #ffffff05" : "none", opacity: isPast ? 0.4 : 1 }}>
-                    <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#777", minWidth: 52 }}>Week {week}</span>
-                    <span>{meta.emoji}</span>
-                    <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 13, color: isCurrent ? "#fff" : "#aaa", flex: 1 }}>{meta.name}</span>
-                    {stroke === "fly" && <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 11, color: week <= 2 ? "#FBBF24" : "#00FF9D" }}>{week <= 2 ? "drills only" : "full stroke"}</span>}
-                    {isCurrent && <span style={{ background: "#00FF9D", color: "#000", fontSize: 10, fontWeight: 700, borderRadius: 4, padding: "2px 6px" }}>NOW</span>}
+            <div style={{ fontSize: 11, letterSpacing: 3, color: "#888", fontFamily: "Barlow,sans-serif", textTransform: "uppercase", marginBottom: 12 }}>12-Week Overview</div>
+            {Array.from({ length: 12 }, (_, i) => {
+              const week = i + 1;
+              const techDay = (week - 1) * 6 + 3;
+              const stroke = strokeForSwimTech(techDay);
+              const meta = STROKE_META[stroke];
+              const isCurrent = week === currentWeek;
+              const isPast = week < currentWeek;
+              const isVO2 = week % 2 === 0;
+              const hasIM = week >= 5;
+              return (
+                <div key={week} style={{ marginBottom: 10, borderRadius: 12, border: isCurrent ? "1px solid #ffffff22" : "1px solid #1e1e1e", background: isCurrent ? "#1a1a1a" : "#141414", opacity: isPast ? 0.45 : 1, overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #1e1e1e" }}>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: isCurrent ? "#fff" : "#888", letterSpacing: 1 }}>WEEK {week}</span>
+                    {isCurrent && <span style={{ background: "#fff", color: "#000", fontSize: 10, fontWeight: 700, borderRadius: 4, padding: "2px 8px" }}>YOU ARE HERE</span>}
+                    {isPast && <span style={{ fontSize: 11, color: "#555", fontFamily: "Barlow,sans-serif" }}>complete</span>}
                   </div>
-                );
-              })}
-            </div>
+                  <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 7 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13 }}>💪</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#FF6B35", minWidth: 70 }}>Strength</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#aaa" }}>Push/Pull/Core · Lower Body</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13 }}>🚴</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#00D4FF", minWidth: 70 }}>Cycling</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#aaa" }}>Zone 2 · {isVO2 ? "VO2 Max intervals" : "Threshold intervals"}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13 }}>🏊</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#00FF9D", minWidth: 70 }}>Swimming</span>
+                      <span style={{ fontFamily: "Barlow,sans-serif", fontSize: 12, color: "#aaa" }}>{meta.emoji} {meta.name}{stroke === "fly" ? (week <= 2 ? " drills" : " full") : ""} · {hasIM ? "Endurance + IM" : "Endurance"}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
