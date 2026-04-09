@@ -164,7 +164,7 @@ function buildSession(day) {
       { name: "KB Romanian Deadlift · 20kg", sets: "4", reps: "10 · 90s rest" },
       { name: "KB Single-Leg Deadlift · 16kg", sets: "3", reps: "8 each · 90s rest" },
       { name: "KB Swing two-hand · 20kg", sets: "4", reps: "20 · 60–90s rest" },
-      { name: "Ring Assisted Pistol Squat", sets: "3", reps: "5 each · 90s rest" },
+      { name: "KB Bulgarian Split Squat · 16kg", sets: "3", reps: "8 each · 90s rest" },
       { name: "KB Turkish Get-Up · 16kg", sets: "3", reps: "3 each · rest as needed" },
       { name: "Finisher: 20 swings + 30s skip + 10 rows", sets: "3 rounds", reps: "90s between rounds" },
     ],
