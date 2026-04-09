@@ -312,7 +312,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ fontFamily: "'Barlow Condensed','Impact',sans-serif", background: "#0a0a0a", minHeight: "100vh", color: "#fff", maxWidth: 430, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'Barlow Condensed','Impact',sans-serif", background: "#0a0a0a", minHeight: "100vh", color: "#fff", maxWidth: 430, margin: "0 auto" }} className="app-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{display:none}
@@ -321,9 +321,23 @@ export default function App() {
         button{cursor:pointer;-webkit-tap-highlight-color:transparent}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         .pulsing{animation:pulse 1.5s ease infinite}
+        @media(min-width:768px){
+          .app-root{max-width:900px !important}
+          .header-inner{padding:52px 40px 20px !important}
+          .scroll-area{padding:0 40px 110px !important; max-height:calc(100vh - 220px) !important}
+          .today-grid{display:grid !important; grid-template-columns:1fr 1fr; gap:20px; align-items:start}
+          .today-right{display:flex; flex-direction:column; gap:12px}
+          .plan-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+          .stats-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+          .bottom-nav{max-width:900px !important}
+          .ex-name{font-size:15px !important}
+          .ex-reps{font-size:14px !important}
+          .session-title{font-size:30px !important}
+          .pace-grid{grid-template-columns:repeat(4,1fr) !important}
+        }
       `}</style>
 
-      <div style={{ padding: "52px 20px 16px", background: "linear-gradient(180deg,#111 0%,#0a0a0a 100%)" }}>
+      <div style={{ padding: "52px 20px 16px", background: "linear-gradient(180deg,#111 0%,#0a0a0a 100%)" }} className="header-inner">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <div>
             <div style={{ fontSize: 11, letterSpacing: 3, color: "#888", fontFamily: "Barlow,sans-serif", textTransform: "uppercase" }}>Week {currentWeek} of 12</div>
@@ -368,9 +382,11 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ padding: "0 20px 110px", overflowY: "auto", maxHeight: "calc(100vh - 210px)" }}>
+      <div style={{ padding: "0 20px 110px", overflowY: "auto", maxHeight: "calc(100vh - 210px)" }} className="scroll-area">
         {tab === "today" && (
           <div className="fu">
+            <div className="today-grid">
+            <div>
             <div style={{ marginTop: 20, borderRadius: 16, overflow: "hidden", background: session.bg, border: `1px solid ${session.color}22` }}>
               <div style={{ background: `linear-gradient(135deg,${session.color}22 0%,transparent 60%)`, padding: "20px 20px 16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -418,6 +434,8 @@ export default function App() {
               </div>
             </div>
 
+            </div>{/* end left col */}
+            <div className="today-right">
             {session.strokeCues && (
               <button onClick={() => setShowCues(p => !p)} style={{ width: "100%", marginTop: 8, padding: "12px 16px", background: "#161616", border: "1px solid #2a2a2a", borderRadius: showCues ? "10px 10px 0 0" : 10, color: "#aaa", fontSize: 14, fontFamily: "Barlow,sans-serif", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>🎯 {session.strokeFocus} key cues</span>
@@ -435,7 +453,7 @@ export default function App() {
             {session.type === "swimming" && (
               <div style={{ marginTop: 8, background: "#001a0e", borderRadius: 12, padding: "12px 16px", border: "1px solid #00FF9D18" }}>
                 <div style={{ fontSize: 11, letterSpacing: 3, color: "#00FF9D", fontFamily: "Barlow,sans-serif", textTransform: "uppercase", marginBottom: 10 }}>Your Pace Zones · CSS 1:53–1:54</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                <div className="pace-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                   {[{ label: "Z1 Easy", pace: "2:10+", color: "#888" }, { label: "Z2 Steady", pace: "2:00–2:05", color: "#00D4FF" }, { label: "Z3 Threshold", pace: "1:58–2:05", color: "#00FF9D" }, { label: "Z4 Speed", pace: "55–57s/50m", color: "#FF6B35" }].map(({ label, pace, color }) => (
                     <div key={label} style={{ background: "#0a0a0a", borderRadius: 8, padding: "8px 10px" }}>
                       <div style={{ fontSize: 10, color: "#666", fontFamily: "Barlow,sans-serif", letterSpacing: 1, textTransform: "uppercase" }}>{label}</div>
@@ -465,6 +483,8 @@ export default function App() {
               </div>
             )}
 
+            </div>{/* end right col */}
+            </div>{/* end today-grid */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 20, padding: "14px 16px", background: "#161616", borderRadius: 12 }}>
               <button onClick={() => goToDay(currentDay - 1)} disabled={currentDay <= 1} style={{ width: 36, height: 36, borderRadius: 8, background: "#222", border: "1px solid #333", color: currentDay <= 1 ? "#333" : "#fff", fontSize: 18 }}>←</button>
               <div style={{ textAlign: "center" }}>
@@ -497,6 +517,7 @@ export default function App() {
               })}
             </div>
             <div style={{ fontSize: 11, letterSpacing: 3, color: "#888", fontFamily: "Barlow,sans-serif", textTransform: "uppercase", marginBottom: 12 }}>12-Week Overview</div>
+            <div className="plan-grid">
             {Array.from({ length: 12 }, (_, i) => {
               const week = i + 1;
               const techDay = (week - 1) * 6 + 3;
@@ -533,6 +554,7 @@ export default function App() {
                 </div>
               );
             })}
+            </div>{/* end plan-grid */}
           </div>
         )}
 
@@ -544,7 +566,8 @@ export default function App() {
               <SCard label="Skipped" value={allLogs.filter(l => l.skipped).length} color="#888" />
               <SCard label="Progress" value={`${progressPct}%`} color="#00D4FF" />
             </div>
-            <div style={{ marginTop: 20 }}>
+            <div className="stats-grid" style={{ marginTop: 20 }}>
+            <div>
               <SLabel>Volume by discipline</SLabel>
               {[{ type: "cycling", label: "Cycling 🚴", positions: [2, 5] }, { type: "swimming", label: "Swimming 🏊", positions: [3, 6] }, { type: "strength", label: "Strength 💪", positions: [1, 4] }].map(({ type, label, positions }) => {
                 const done = doneLogs.filter(l => positions.includes(l.pos)).length; const max = 24;
@@ -559,8 +582,9 @@ export default function App() {
                   </div>
                 );
               })}
-            </div>
-            <div style={{ marginTop: 20 }}>
+            </div>{/* end stats left col */}
+            <div>{/* stats right col */}
+            <div style={{ marginTop: 0 }}>
               <SLabel>Stroke technique sessions</SLabel>
               <div style={{ background: "#161616", borderRadius: 12, padding: 14 }}>
                 {[{ key: "back", label: "Backstroke", emoji: "🔵" }, { key: "breast", label: "Breaststroke", emoji: "🟢" }, { key: "fly", label: "Butterfly", emoji: "🟡" }].map(({ key, label, emoji }) => {
@@ -593,6 +617,8 @@ export default function App() {
               </div>
               <MiniChart data={benchmarks.swim100} color="#00FF9D" unit="s" lowerIsBetter />
             </div>
+            </div>{/* end stats right col */}
+            </div>{/* end stats-grid */}
             <div style={{ marginTop: 20 }}>
               <SLabel>Recent sessions</SLabel>
               {allLogs.length === 0 && <div style={{ fontFamily: "Barlow,sans-serif", fontSize: 14, color: "#555", textAlign: "center", padding: "24px 0" }}>No sessions logged yet. Let's go! 💪</div>}
@@ -614,7 +640,7 @@ export default function App() {
         )}
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "#111111ee", backdropFilter: "blur(20px)", borderTop: "1px solid #ffffff0a", display: "flex", padding: "10px 0 24px" }}>
+      <div className="bottom-nav" style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "#111111ee", backdropFilter: "blur(20px)", borderTop: "1px solid #ffffff0a", display: "flex", padding: "10px 0 24px" }}>
         {[
           { id: "today", label: "TODAY", d: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
           { id: "schedule", label: "PLAN", d: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
