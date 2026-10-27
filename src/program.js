@@ -54,22 +54,28 @@ function pw(lo, hi, ftp) {
 // ── Phases ───────────────────────────────────────────────────
 export const PHASES = [
   {
-    id: "restart", name: "Restart", from: 1, to: 8, season: "Summer", color: "#A78BFA",
-    goal: "Rebuild the habit and the aerobic base without getting hurt.",
-    template: "Strength 2 · Bike 2 · Swim 2 · ~5–6 h",
-    why: "Bike and swim stay almost all easy for 4 weeks: aerobic fitness comes back fast, tendons and shoulders more slowly. Workouts A & B carry on unchanged. FTP and CSS get retested in week 3 so every zone after that is your own.",
+    id: "restart", name: "Restart", from: 1, to: 4, season: "Summer", color: "#A78BFA",
+    goal: "Rebuild the habit and set baselines before the December holiday.",
+    template: "Strength 2 (A & B) · Bike 2 · Swim 2 · ~5 h",
+    why: "Bike and swim stay easy: aerobic fitness comes back fast, tendons and shoulders more slowly. Workouts A & B carry on unchanged. Week 3 FTP and CSS tests and the week 4 strength tests give you numbers to compare against in January.",
   },
   {
-    id: "summer", name: "Summer Base", from: 9, to: 16, season: "Summer", color: "#00D4FF",
-    goal: "Build the engine: sweet spot and threshold on the bike, CSS work in the pool, strength held with harder kettlebell variations.",
-    template: "Strength 2 · Bike 2 (+1 optional) · Swim 2 · ~6–7 h",
-    why: "About 80% of bike and swim time stays easy, with one quality ride a week. The long ride moves outdoors onto the MTB so skills develop alongside fitness.",
+    id: "holiday", name: "Holiday", from: 5, to: 9, season: "Summer", color: "#38BDF8",
+    goal: "A month away with no bike, pool or weights: easy running and bodyweight circuits keep most of your fitness.",
+    template: "Run 3 · Bodyweight 2 (+1 optional) · ~3 h",
+    why: "Runs start as run-walk and grow about 10% a week, because new runners get hurt from fast increases in distance (Nielsen et al. 2014). Bodyweight circuits hold strength for a month. Expect to lose some cycling power (roughly 5–10% of FTP); most of it returns within a few weeks.",
+  },
+  {
+    id: "summer", name: "Summer Base", from: 10, to: 16, season: "Summer", color: "#00D4FF",
+    goal: "Second restart, then build: gym from January, sweet spot and threshold on the bike, CSS work in the pool.",
+    template: "Gym 2 · Bike 2 (+1 optional) · Swim 2 · ~6–7 h",
+    why: "Week 10 is easy riding and swimming plus gym technique; week 11 retests FTP and CSS because November's numbers are out of date. Four weeks of barbell technique at moderate loads, then heavy from week 14: strength only keeps improving if the load stays heavy. From February the long ride carries two sweet-spot blocks. Once your weekly average weight is under 85 kg, move to maintenance calories before training load climbs.",
   },
   {
     id: "sabie", name: "Sabie Build", from: 17, to: 26, season: "Summer", color: "#FBBF24",
-    goal: "Get race-ready for Sabie Lite (29 Apr–1 May): 3-hour MTB rides, back-to-back weekends, climbing and surge intervals, then a 2-week taper.",
-    template: "Strength 2 (maintenance) · Bike 3 · Swim 1 · ~7–8 h",
-    why: "A stage race is decided by how you ride on day 2 and 3, so back-to-back weekends are the key session. Strength drops to maintenance: 2 short sessions hold it. The taper cuts volume ~40–60% but keeps short efforts at race intensity.",
+    goal: "Race-ready for Sabie Lite (29 Apr–1 May): 3-hour MTB rides, back-to-back weekends, climbing and surge intervals, then a 2-week taper.",
+    template: "Gym 2 (maintenance) · Bike 3 · Swim 2 · ~7.5–9 h (above your 6–7 h)",
+    why: "A stage race is decided by how you ride on days 2 and 3, so back-to-back weekends are the key sessions. Strength drops to two shorter heavy sessions, which hold it. A short easy swim on Monday flushes the legs after the weekend. The taper cuts volume about 40–60% and keeps short race-pace efforts (Bosquet et al. 2007).",
   },
   {
     id: "recover", name: "Recover", from: 27, to: 28, season: "Autumn", color: "#888",
@@ -78,33 +84,27 @@ export const PHASES = [
     why: "A short planned break after the first stage race lets the body absorb the block and resets motivation before winter.",
   },
   {
-    id: "gymramp", name: "Gym Ramp", from: 29, to: 32, season: "Winter", color: "#FF6B35",
-    goal: "Learn (or relearn) the barbell lifts at moderate loads before the strength block.",
-    template: "Strength 3 · Bike 2 · Swim 1 · ~6 h",
-    why: "After years away from barbells, technique comes first. Loads stay 2–3 reps short of failure. Week 32 sets your starting e1RMs.",
-  },
-  {
-    id: "winter", name: "Winter Strength", from: 33, to: 42, season: "Winter", color: "#FF6B35",
-    goal: "Get strong: 3 gym sessions a week in 4-week waves, while bike and swim hold fitness.",
-    template: "Strength 3 · Bike 2 · Swim 1 (+1 optional) · ~6–7 h",
-    why: "Endurance is maintained with 2 rides a week as long as one keeps its intensity. Heavy lifting on separate days from the bike intervals avoids most of the interference effect.",
+    id: "winter", name: "Winter Strength", from: 29, to: 42, season: "Winter", color: "#FF6B35",
+    goal: "Get strong: 3 gym sessions a week in 4-week waves, while the long ride grows to 3 hours so you start the W2W build with a base.",
+    template: "Gym 3 · Bike 2 · Swim 2 · ~7–8.5 h (above your 6–7 h)",
+    why: "You arrive already lifting heavy, so winter builds on summer instead of starting over. Endurance holds on 2 rides a week while one keeps its intensity; the Saturday ride grows from 2 to 3 hours by August. Heavy legs and bike intervals sit on different days. Late-winter weeks with a 3-hour ride run about 8 hours.",
   },
   {
     id: "w2w", name: "W2W Build", from: 43, to: 53, season: "Spring", color: "#00FF9D",
-    goal: "Build for Wines2Whales (~200 km, ~4,500 m in 3 days): long climbs, back-to-back days, the Heritage Day rehearsal, then a taper.",
-    template: "Strength 2 (maintenance) · Bike 3–4 · Swim 1 · ~7–8 h, 8–9 h in Oct",
-    why: "W2W is about twice the load of Sabie Lite, so this block is longer and peaks higher: three weeks at 8–9 h. Strength stays at 2 heavy, short sessions so you don't lose the winter gains.",
+    goal: "Wines2Whales (~200 km, ~4,500 m in 3 days): long climbs, a 4h45 ride, back-to-backs of 3 + 2.5 h, the Heritage Day rehearsal, then a taper.",
+    template: "Gym 2 (maintenance) · Bike 3–4 · Swim 2 · ~8 h, 9–10 h in Oct",
+    why: "Stage-race readiness comes from long rides close to stage duration and from riding on tired legs, so October peaks at 9–10 hours for three weeks. Strength stays at 2 short heavy sessions so the winter gains hold.",
   },
 ];
 export function phaseOf(w) { return PHASES.find(p => w >= p.from && w <= p.to) || null; }
 
-// Week types: build · deload · test · taper · race · recover · reduced
+// Week types
 const WEEK_TYPES = {
-  4: "deload", 8: "deload", 12: "deload", 16: "test", 20: "deload", 24: "reduced", 25: "taper", 26: "race",
-  27: "recover", 28: "recover", 32: "test", 36: "deload", 40: "test", 46: "deload", 47: "rehearsal", 48: "recover",
-  52: "taper", 53: "race",
+  3: "test", 5: "holiday", 6: "holiday", 7: "holiday", 8: "holiday", 9: "holiday", 10: "return", 11: "test",
+  16: "test", 20: "deload", 24: "reduced", 25: "taper", 26: "race", 27: "recover", 28: "recover",
+  32: "deload", 36: "deload", 40: "test", 46: "deload", 47: "rehearsal", 48: "recover", 52: "taper", 53: "race",
 };
-export function weekType(w) { if (w === 3) return "test"; return WEEK_TYPES[w] || "build"; }
+export function weekType(w) { return WEEK_TYPES[w] || "build"; }
 export const WEEK_TYPE_META = {
   build: { label: "Build", color: "#00D4FF" },
   deload: { label: "Deload", color: "#A78BFA" },
@@ -114,18 +114,28 @@ export const WEEK_TYPE_META = {
   race: { label: "Race week", color: "#FF4D6D" },
   recover: { label: "Recover", color: "#888" },
   rehearsal: { label: "Rehearsal", color: "#FF4D6D" },
+  holiday: { label: "Holiday", color: "#38BDF8" },
+  return: { label: "Back", color: "#A78BFA" },
 };
 
 export const MILESTONES = [
-  { week: 3, text: "FTP ramp test and CSS test: all zones update" },
+  { week: 1, text: "Mobility baseline (Saturday, before the ride)" },
+  { week: 3, text: "FTP ramp test and CSS test" },
   { week: 4, text: "Strength rep tests (baseline)" },
-  { week: 16, text: "Retest everything" },
+  { week: 5, text: "Holiday: running and bodyweight only" },
+  { week: 10, text: "Back home: gym starts, easy bike and swim" },
+  { week: 11, text: "FTP and CSS retest: zones reset" },
+  { week: 14, text: "Heavy lifting starts" },
+  { week: 16, text: "First gym e1RMs and mobility retest" },
   { week: 19, text: "Checkpoint: 3-hour outdoor MTB ride" },
+  { week: 20, text: "FTP retest" },
   { week: 23, text: "Checkpoint: back-to-back weekend, Sabie simulation" },
   { week: 26, text: "Sabie Xperience Lite · 29 Apr–1 May" },
-  { week: 32, text: "Starting e1RMs for the gym lifts" },
+  { week: 39, text: "Checkpoint: 3-hour winter ride" },
   { week: 40, text: "Retest everything" },
+  { week: 46, text: "FTP retest and mobility" },
   { week: 47, text: "DIY stage race rehearsal · 24–26 Sep" },
+  { week: 50, text: "Longest ride of the plan: 4h45" },
   { week: 53, text: "Wines2Whales (confirm edition dates)" },
 ];
 
@@ -159,6 +169,13 @@ const EX = {
   slbridge: { name: "Single-leg glute bridge", load: "16 kg", cue: "Hips level", next: "Shoulders on a bench (hip thrust)" },
   copenhagen: { name: "Copenhagen plank (short lever)", load: "BW", cue: "Knee on the bench, hips up", next: "Long lever (foot on bench)" },
   deadbugkb: { name: "Dead bug holding a bell", load: "8–16 kg", cue: "Back flat on the floor", next: "3 s each way" },
+  // bodyweight (holiday)
+  bwbss: { name: "Bulgarian split squat (back foot on a chair)", load: "BW", cue: "Drop straight down, front heel planted", next: "3 s lowering, then a loaded backpack" },
+  bwslb: { name: "Single-leg glute bridge", load: "BW", cue: "Hips level, 1 s squeeze", next: "Shoulders on a couch" },
+  pike: { name: "Pike push-up", load: "BW", cue: "Hips high, head goes between the hands", next: "Feet on a chair" },
+  bwlunge: { name: "Reverse lunge", load: "BW", cue: "Front shin vertical", next: "3 s lowering, then a backpack" },
+  ytw: { name: "Prone Y-T-W raise", load: "BW", cue: "Lying face down, thumbs up, squeeze shoulder blades", next: "2 s hold at the top" },
+  jumpsq: { name: "Squat jump", load: "BW", cue: "Land softly, full reset between reps", next: "Higher intent" },
   // gym
   squat: { name: "Back squat", load: "Barbell", cue: "Brace, hips and knees together, depth you own", next: "+2.5–5 kg when all sets hit target reps at the RIR" },
   bench: { name: "Bench press", load: "Barbell", cue: "Shoulder blades pinned, touch low chest", next: "+2.5 kg when all sets hit target" },
@@ -228,6 +245,44 @@ function gymC(sets) {
     lift("stepup", 3, "8 / leg", "90 s"), lift("tgu", 2, "2 / side", "as needed"), lift("copenhagen", 2, "20 s / side", "45 s")];
 }
 
+// Holiday: bodyweight circuits (no equipment)
+function bwA(rounds) {
+  return [{ name: "Warm-up · 5 min", detail: "Marching or easy jog on the spot · 10 BW squats · 10 hip hinges · 10 arm circles · 5 inchworms" },
+    div(`Circuit · ${rounds} rounds · 45 s between moves, 2 min between rounds`),
+    lift("pushup", rounds, "8–15 (stop 2 short)", "45 s"), lift("bwbss", rounds, "10 / leg", "45 s"),
+    lift("bwslb", rounds, "12 / leg", "45 s"), lift("plank", rounds, "45 s", "2 min")];
+}
+function bwB(rounds) {
+  return [{ name: "Warm-up · 5 min", detail: "Marching or easy jog on the spot · 10 BW squats · 10 hip hinges · 10 arm circles · 5 inchworms" },
+    div(`Circuit · ${rounds} rounds · 45 s between moves, 2 min between rounds`),
+    lift("pike", rounds, "6–10", "45 s"), lift("bwlunge", rounds, "10 / leg", "45 s"),
+    lift("ytw", rounds, "8 each letter", "45 s"), lift("sideplank", rounds, "30 s / side", "45 s"), lift("jumpsq", rounds, "5", "2 min")];
+}
+function run(slot, minutes, detail, title) {
+  return {
+    slot, type: "run", title: title || `Easy run · ${minutes} min`, minutes, rpe: 3, hardMin: 0,
+    blocks: [
+      { name: "Warm-up", detail: "5 min brisk walk" },
+      { name: "Run", detail },
+      { name: "Cool-down", detail: "5 min walk, then calf and hip-flexor stretch" },
+    ],
+    notes: ["Flat and conversational: if you can't talk in sentences, walk.", "Knee or Achilles complaining? Stop, walk home, and log the pain."],
+  };
+}
+// Gym 2×/week (summer, Sabie, W2W): Monday heavy, Thursday power + single-leg
+function gymHeavy(sets, reps, rir) {
+  return [GYM_WARMUP, div(`Main · ${rir}`),
+    lift("squat", sets, reps, "2–3 min"), lift("bench", sets, reps, "2–3 min"),
+    lift("trapbar", Math.max(2, sets - 1), reps, "2–3 min"), lift("pullup", sets, reps, "2 min"),
+    div("Core"), lift("pallof", 2, "10 / side", "60 s")];
+}
+function gymPower(sets) {
+  return [GYM_WARMUP, div("Power"), lift("boxjump", 4, "3", "90 s"), div(`Single-leg + upper · ${sets} sets · RIR 2`),
+    lift("bss", sets, "6–8 / leg", "90 s"), lift("dbslrdl", sets, "8 / leg", "90 s"),
+    lift("ohp", sets, "6–8", "2 min"), lift("dbrow", sets, "8–10", "90 s"),
+    lift("copenhagen", 2, "20 s / side", "45 s"), lift("heavycarry", 2, "30 m", "90 s")];
+}
+
 function strengthSession(slot, title, blocks, minutes, rpe, extra = {}) {
   return { slot, type: "strength", title, blocks, minutes, rpe, hardMin: 0, ...extra };
 }
@@ -268,14 +323,15 @@ const SURGE = (n) => ftp => [{ name: `30/30s · ${n} sets × 10 reps`, detail: `
 const TORQUE = (n, len) => ftp => [{ name: `Climbing torque ${n} × ${len} min`, detail: `${pw(88, 95, ftp)} at 60–70 rpm, seated, quiet upper body · 4 min easy between` }];
 const OPENERS = (n, len) => ftp => [{ name: `Openers ${n} × ${len} min`, detail: `${pw(105, 110, ftp)} · 3 min easy between. Should feel snappy, not hard` }];
 
-function longRide(slot, minutes, ftp, { mtb = false, b2b = false, rpe = 4, title, notes = [] } = {}) {
-  const fuel = minutes >= 90 ? ["Fuel from the first hour: 40–60 g carbs per hour (60–90 g from 2.5 h). Practise race food."] : [];
+function longRide(slot, minutes, ftp, { mtb = false, b2b = false, ss = false, rpe = 4, title, notes = [] } = {}) {
+  const fuel = minutes > 90 ? ["Fuel 60–90 g carbs per hour from the first hour. Practise race food."] : [];
   return {
     slot, type: "bike", title: title || `${b2b ? "Back-to-back" : "Long ride"} · ${fmtMin(minutes)}${mtb ? " · MTB" : ""}`,
-    minutes, rpe, hardMin: 0,
+    minutes, rpe: ss ? 5 : rpe, hardMin: ss ? 40 : 0,
     zwift: mtb ? "Outdoors on the MTB if you can (trail park). Zwift long route if not." : "Zwift long route or outdoors.",
     blocks: [
       { name: "Ride", detail: `${fmtMin(minutes)} mostly Z2 · ${pw(56, 75, ftp)}. Climbs can go to Z3, never above.` },
+      ...(ss ? [{ name: "Sweet spot 2 × 20 min", detail: `In the middle hour, ideally on long climbs: ${pw(88, 94, ftp)} · 10 min easy between` }] : []),
       ...(mtb ? [{ name: "Skills", detail: "Pick one per ride: braking before corners · looking through the turn · descending on the pedals · technical climbs in the right gear · drops and rock gardens" }] : []),
     ],
     notes: [...fuel, ...(b2b ? ["Day 2 of a back-to-back: the point is riding on tired legs. Keep it Z2."] : []), ...notes],
@@ -409,74 +465,93 @@ export const MOBILITY_ROUTINE = [
 
 // ── The weekly generator ────────────────────────────────────
 // ctx: { ftp, gym (bool) }
+function mondaySwim(optional = false) {
+  return {
+    slot: "Mon", type: "swim", title: `Easy recovery swim · 30 min${optional ? " (optional)" : ""}`, minutes: 30, rpe: 2, hardMin: 0,
+    ...(optional ? { optional: true } : {}),
+    blocks: [
+      { name: "Warm-up", detail: "200 m Z1 mixed strokes" },
+      { name: "6 × 100", detail: "Z1–Z2, alternate free and back · 20 s rest" },
+      { name: "Kick 4 × 25", detail: "Easy, any stroke" },
+      { name: "Cool-down", detail: "100 m Z1" },
+    ],
+    notes: ["Flushes the legs after the weekend. Swim later in the day than the gym session, or straight after it."],
+  };
+}
+
 export function buildWeek(w, ctx = {}) {
   const ftp = ctx.ftp || null;
   const gym = ctx.gym !== false;
   const t = weekType(w);
   let s = [];
 
-  // ── Phase 1 · Restart (W1–8) ──
-  if (w <= 8) {
-    const sets = t === "deload" ? 2 : 3;
-    const progress = w >= 6 ? " · harder variations allowed" : "";
-    s.push(strengthSession("Mon", `Workout A${progress}`, kbA(sets), 40, 6));
-    const tue = {
+  // ── Restart (W1–4): home kettlebells, easy bike and swim, baselines ──
+  if (w <= 4) {
+    s.push(strengthSession("Mon", "Workout A", kbA(3), 40, 6, w === 4 ? { note: "Last full week before the holiday." } : {}));
+    s.push({
       1: z2Ride("Tue", 45, ftp),
       2: z2Ride("Tue", 50, ftp, { addBlocks: [{ name: "Cadence drills", detail: "4 × 30 s at 110+ rpm, easy power, inside the Z2 block" }] }),
       3: ftpTest("Tue"),
-      4: z2Ride("Tue", 45, ftp),
-      5: intervals("Tue", "Sweet spot 3 × 8", SS(3, 8), ftp, { minutes: 60, hardMin: 24, rpe: 6 }),
-      6: intervals("Tue", "Sweet spot 3 × 10", SS(3, 10), ftp, { minutes: 65, hardMin: 30, rpe: 6 }),
-      7: intervals("Tue", "Sweet spot 3 × 12", SS(3, 12), ftp, { minutes: 70, hardMin: 36, rpe: 7 }),
-      8: z2Ride("Tue", 45, ftp, { addBlocks: [{ name: "Openers", detail: `3 × 1 min at ${pw(105, 110, ftp)} in the last 15 min` }] }),
-    }[w];
-    s.push(tue);
-    const fly = w >= 5 ? 1 : 0;
-    const techMain = w <= 2 ? [z2x(4)] : w === 4 || w === 8 ? [z2x(4)] : w <= 5 ? [z2x(6)] : [z2x(4), z3x(4)];
-    s.push(swimTech("Wed", w, { main: techMain, flyLvl: fly, minutes: w <= 2 ? 40 : 50, hardMin: w >= 6 && t !== "deload" ? 8 : 0 }));
-    if (w === 4) s.push(kbTestSession("Thu"));
-    else s.push(strengthSession("Thu", `Workout B${progress}`, kbB(sets), 40, 6));
-    if (w === 3) s.push(cssTest("Fri"));
-    else {
-      const im = w >= 6 ? 1 : 0;
-      const main = w <= 2 ? [HALF_PYR] : t === "deload" ? [HALF_PYR] : w <= 5 ? [PYR] : [PYR, z2x(4)];
-      s.push(swimAerobic("Fri", { imLvl: t === "deload" ? 0 : im, main, minutes: w <= 2 ? 40 : 50 }));
-    }
-    const sat = { 1: 60, 2: 75, 3: 75, 4: 60, 5: 90, 6: 100, 7: 120, 8: 75 }[w];
-    s.push(longRide("Sat", sat, ftp, { mtb: w === 7, title: w <= 4 ? `Endurance · ${fmtMin(sat)}` : undefined, notes: w === 7 ? ["First outdoor MTB ride of the plan if you can get to a trail park."] : [] }));
-    if (w === 1 || w === 8) s.push(mobilityTest("Sun"));
+      4: z2Ride("Tue", 60, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)} in the last 15 min` }] }),
+    }[w]);
+    s.push(swimTech("Wed", w, { main: [w <= 2 ? z2x(4) : z2x(6)], flyLvl: 0, minutes: w <= 2 ? 40 : 50 }));
+    s.push(w === 4 ? kbTestSession("Thu") : strengthSession("Thu", "Workout B", kbB(3), 40, 6));
+    s.push(w === 3 ? cssTest("Fri") : swimAerobic("Fri", { main: [w <= 2 ? HALF_PYR : PYR], minutes: w <= 2 ? 40 : 50 }));
+    if (w === 1) s.push(mobilityTest("Sat"));
+    const sat = { 1: 60, 2: 75, 3: 75, 4: 90 }[w];
+    s.push(longRide("Sat", sat, ftp, { title: `Endurance · ${fmtMin(sat)}` }));
   }
 
-  // ── Phase 2 · Summer Base (W9–16) ──
+  // ── Holiday (W5–9): running + bodyweight only ──
+  else if (w <= 9) {
+    const R = {
+      5: [[20, "2 min run / 1 min walk × 6, then walk 2 min"], [20, "2 min run / 1 min walk × 6, then walk 2 min"], [20, "3 min run / 1 min walk × 5"]],
+      6: [[25, "4 min run / 1 min walk × 5"], [25, "4 min run / 1 min walk × 5"], [25, "5 min run / 1 min walk × 4"]],
+      7: [[30, "5 min run / 1 min walk × 5"], [30, "5 min run / 1 min walk × 5"], [25, "25 min continuous, very easy"]],
+      8: [[30, "30 min continuous, easy"], [30, "30 min continuous, easy"], [35, "35 min continuous, easy"]],
+      9: [[30, "30 min continuous, easy"], [30, "30 min continuous, easy"], [40, "40 min continuous, easy"]],
+    }[w];
+    const rounds = w === 5 ? 2 : 3;
+    s.push(run("Mon", R[0][0], R[0][1], `Run-walk · ${R[0][0]} min`));
+    s.push(strengthSession("Tue", "Bodyweight circuit A", bwA(rounds), 30, 6));
+    s.push(run("Wed", R[1][0], R[1][1], `Run-walk · ${R[1][0]} min`));
+    s.push(strengthSession("Thu", "Bodyweight circuit B", bwB(rounds), 30, 6));
+    s.push({ ...strengthSession("Fri", "Bodyweight circuit A (optional)", bwA(2), 25, 5), optional: true });
+    s.push(run("Sat", R[2][0], R[2][1], `Longest run · ${R[2][0]} min`));
+  }
+
+  // ── Summer Base (W10–16): second restart, gym ramp → heavy ──
   else if (w <= 16) {
-    const deload = t === "deload" || t === "test";
-    const sets = deload ? 2 : 3;
-    s.push(strengthSession("Mon", "Strength A+ (summer)", kbAplus(sets), 40, 7));
-    const tue = {
-      9: intervals("Tue", "Sweet spot 3 × 12", SS(3, 12), ftp, { minutes: 70, hardMin: 36, rpe: 6 }),
-      10: intervals("Tue", "Threshold 3 × 10", THR(3, 10), ftp, { minutes: 70, hardMin: 30, rpe: 7 }),
-      11: intervals("Tue", "Sweet spot 2 × 20", SS(2, 20), ftp, { minutes: 75, hardMin: 40, rpe: 7 }),
-      12: z2Ride("Tue", 45, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)}, 2 min easy between` }] }),
-      13: intervals("Tue", "Threshold 2 × 15", THR(2, 15), ftp, { minutes: 70, hardMin: 30, rpe: 7 }),
-      14: intervals("Tue", "VO2max 5 × 3", VO2(5, 3), ftp, { minutes: 65, hardMin: 15, rpe: 8 }),
-      15: intervals("Tue", "Over-unders 3 × 9", OU(3), ftp, { minutes: 75, hardMin: 27, rpe: 8 }),
-      16: ftpTest("Tue"),
-    }[w];
-    s.push(tue);
-    const fly = w >= 13 ? 3 : 2;
-    const im = w >= 13 ? 3 : 2;
-    s.push(swimTech("Wed", w, { main: deload ? [z2x(6)] : [z3x(w >= 13 ? 10 : 8)], flyLvl: fly, minutes: 55, hardMin: deload ? 0 : 15, rpe: deload ? 4 : 6 }));
-    if (w === 16) s.push(kbTestSession("Thu"));
-    else s.push(strengthSession("Thu", "Strength B+ (summer)", kbBplus(sets), 40, 7));
-    if (w === 16) s.push(cssTest("Fri"));
-    else s.push(swimAerobic("Fri", { imLvl: deload ? 1 : im, main: deload ? [HALF_PYR] : [PYR, z4x(w >= 13 ? 8 : 6)], minutes: 55, hardMin: deload ? 0 : 4, rpe: 5 }));
-    const sat = { 9: 120, 10: 135, 11: 150, 12: 90, 13: 150, 14: 165, 15: 180, 16: 120 }[w];
-    s.push(longRide("Sat", sat, ftp, { mtb: true }));
-    s.push(z2Ride("Sun", 60, ftp, { title: "Easy spin · 60 min (optional)", optional: true, rpe: 2, notes: ["Optional. Skip it if sleep has been poor."] }));
-    if (w === 16) s.push(mobilityTest("Sun"));
+    const H = { 10: [2, "8", "RIR 3 · technique"], 11: [3, "8", "RIR 3"], 12: [3, "6", "RIR 2–3"], 13: [3, "6", "RIR 2"], 14: [4, "6", "RIR 1–2"], 15: [4, "5", "RIR 1–2"] }[w];
+    if (w === 16) s.push(gym ? gymTestSession("Mon") : kbTestSession("Mon"));
+    else if (gym) s.push(strengthSession("Mon", w <= 13 ? `Gym · heavy day (technique ramp ${w - 9}/4)` : `Gym · heavy day ${H[0]} × ${H[1]}`, gymHeavy(H[0], H[1], H[2]), 55, w <= 13 ? 6 : 8, w === 10 ? { note: "First gym week: film your squat and deadlift sets. Loads stay easy." } : {}));
+    else s.push(strengthSession("Mon", "Strength A+", kbAplus(w <= 11 ? 2 : 3), 40, 7));
+    s.push({
+      10: z2Ride("Tue", 50, ftp, { title: "Easy ride · 50 min (first ride back)" }),
+      11: ftpTest("Tue"),
+      12: intervals("Tue", "Sweet spot 3 × 10", SS(3, 10), ftp, { minutes: 65, hardMin: 30, rpe: 6 }),
+      13: intervals("Tue", "Sweet spot 3 × 12", SS(3, 12), ftp, { minutes: 70, hardMin: 36, rpe: 6 }),
+      14: intervals("Tue", "Threshold 3 × 10", THR(3, 10), ftp, { minutes: 70, hardMin: 30, rpe: 7 }),
+      15: intervals("Tue", "VO2max 5 × 3", VO2(5, 3), ftp, { minutes: 65, hardMin: 15, rpe: 8 }),
+      16: z2Ride("Tue", 50, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)}` }] }),
+    }[w]);
+    const fly = { 10: 0, 11: 1, 12: 1, 13: 2, 14: 2, 15: 2, 16: 1 }[w];
+    const techMain = { 10: [z2x(4)], 11: [z2x(6)], 12: [z3x(6)], 13: [z3x(8)], 14: [z3x(8)], 15: [z3x(10)], 16: [z2x(6)] }[w];
+    s.push(swimTech("Wed", w, { main: techMain, flyLvl: fly, minutes: w === 10 ? 40 : 50, hardMin: w >= 12 && w <= 15 ? 14 : 0, rpe: w >= 12 && w <= 15 ? 6 : 4, extraBlocks: w === 10 ? [{ name: "Note", detail: "First swim back after a month off: technique only, no hard efforts" }] : [] }));
+    s.push(gym && w !== 16 ? strengthSession("Thu", "Gym · power + single-leg", gymPower(w <= 11 ? 2 : 3), 50, 6) : strengthSession("Thu", w === 16 ? (gym ? "Gym · power (deload)" : "Strength B+ (deload)") : "Strength B+", gym && w === 16 ? gymPower(2) : kbBplus(w === 16 || w <= 11 ? 2 : 3), 45, 5));
+    if (w === 11) s.push(cssTest("Fri"));
+    else s.push(swimAerobic("Fri", {
+      imLvl: { 10: 0, 12: 1, 13: 1, 14: 2, 15: 2, 16: 1 }[w], minutes: w === 10 ? 40 : 50,
+      main: { 10: [HALF_PYR], 12: [PYR, z4x(6)], 13: [PYR, z4x(6)], 14: [PYR, z4x(8)], 15: [PYR, z4x(8)], 16: [HALF_PYR] }[w],
+      hardMin: w >= 12 && w <= 15 ? 4 : 0, rpe: 5,
+    }));
+    if (w === 16) s.push(mobilityTest("Sat"));
+    const sat = { 10: 75, 11: 90, 12: 120, 13: 135, 14: 135, 15: 150, 16: 120 }[w];
+    s.push(longRide("Sat", sat, ftp, { mtb: w >= 11, ss: w === 14 || w === 15, title: w === 10 ? "Endurance · 1h15 (easy)" : undefined }));
+    if (w >= 12 && w <= 15) s.push(z2Ride("Sun", 60, ftp, { title: "Easy spin · 60 min (optional)", optional: true, rpe: 2, notes: ["Optional. Skip it if sleep has been poor."] }));
   }
 
-  // ── Phase 3 · Sabie Build (W17–26) ──
+  // ── Sabie Build (W17–26) ──
   else if (w <= 26) {
     if (w === 26) {
       s.push(intervals("Mon", "Openers 3 × 1 (Zwift)", OPENERS(3, 1), ftp, { minutes: 40, hardMin: 3, rpe: 4, notes: ["Last ride before the drive up on Tuesday."] }));
@@ -492,111 +567,78 @@ export function buildWeek(w, ctx = {}) {
     } else {
       const reduced = t === "deload" || t === "reduced";
       const sets = w >= 23 || reduced ? 2 : 3;
-      if (w === 25) {
-        s.push(strengthSession("Mon", "Strength A+ (taper, light)", kbAplus(2).filter(b => !b.ex || ["jump", "rfess", "ringpush", "ringpull"].includes(b.ex)), 30, 5));
-      } else {
-        s.push(strengthSession("Mon", "Strength A+ (maintenance)", kbAplus(sets), 35, 7));
-      }
-      const tue = {
+      if (w === 25) s.push(gym ? strengthSession("Mon", "Gym · light 2 × 3 (taper)", gymHeavy(2, "3", "RIR 3–4"), 40, 5) : strengthSession("Mon", "Strength A+ (taper, light)", kbAplus(2), 30, 5));
+      else s.push(gym ? strengthSession("Mon", `Gym · heavy maintenance ${sets} × 5`, gymHeavy(sets, "5", reduced ? "RIR 3" : "RIR 2"), 40, reduced ? 6 : 8) : strengthSession("Mon", "Strength A+ (maintenance)", kbAplus(sets), 35, 7));
+      s.push(mondaySwim());
+      s.push({
         17: intervals("Tue", "VO2max 5 × 4", VO2(5, 4), ftp, { minutes: 70, hardMin: 20, rpe: 8 }),
         18: intervals("Tue", "Threshold 2 × 20", THR(2, 20), ftp, { minutes: 80, hardMin: 40, rpe: 7 }),
         19: intervals("Tue", "30/30s · 3 sets", SURGE(3), ftp, { minutes: 70, hardMin: 15, rpe: 8 }),
-        20: z2Ride("Tue", 50, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)}` }] }),
+        20: ftpTest("Tue"),
         21: intervals("Tue", "Climbing torque 5 × 6", TORQUE(5, 6), ftp, { minutes: 75, hardMin: 30, rpe: 7 }),
         22: intervals("Tue", "VO2max 6 × 4", VO2(6, 4), ftp, { minutes: 75, hardMin: 24, rpe: 8 }),
         23: intervals("Tue", "Over-unders 3 × 9", OU(3), ftp, { minutes: 75, hardMin: 27, rpe: 8 }),
         24: intervals("Tue", "Threshold 2 × 15", THR(2, 15), ftp, { minutes: 70, hardMin: 30, rpe: 7 }),
         25: intervals("Tue", "Taper: race-pace 4 × 2", OPENERS(4, 2), ftp, { minutes: 45, hardMin: 8, rpe: 5, notes: ["Volume is down; intensity stays. You should feel fresher every day this week."] }),
-      }[w];
-      s.push(tue);
-      const fly = 2, im = 2;
-      s.push(swimAerobic("Wed", { imLvl: reduced || w === 25 ? 1 : im, title: w === 25 ? "Easy swim · 30 min" : "Swim · technique + aerobic", main: w === 25 ? [z2x(4)] : [{ name: "Drill set 4 × 50", detail: `${["back", "breast", "fly"][(w - 1) % 3]} focus · 15 s rest${fly ? " (fly: full stroke 4 × 25 allowed)" : ""}` }, z3x(reduced ? 4 : 8)], minutes: w === 25 ? 30 : 50, hardMin: reduced || w === 25 ? 0 : 12, rpe: 5 }));
-      if (w !== 25) s.push(strengthSession("Thu", "Strength B+ (maintenance)", kbBplus(sets), 35, 7));
+      }[w]);
+      s.push(swimAerobic("Wed", {
+        imLvl: reduced || w === 25 ? 1 : 2, title: w === 25 ? "Easy swim · 30 min" : "Swim · technique + aerobic",
+        main: w === 25 ? [z2x(4)] : [{ name: "Drill set 4 × 50", detail: `${["Backstroke", "Breaststroke", "Butterfly"][(w - 1) % 3]} focus · 15 s rest (fly: full stroke 4 × 25 allowed)` }, z3x(reduced ? 4 : 8)],
+        minutes: w === 25 ? 30 : 50, hardMin: reduced || w === 25 ? 0 : 12, rpe: 5,
+      }));
+      if (w !== 25) s.push(gym ? strengthSession("Thu", "Gym · power + single-leg", gymPower(sets), 45, 6) : strengthSession("Thu", "Strength B+ (maintenance)", kbBplus(sets), 35, 7));
       const b2b = [19, 21, 23].includes(w);
-      if (!b2b && w !== 25) s.push(z2Ride("Fri", w === 20 || w === 24 ? 45 : 60, ftp, { title: `MTB skills or Z2 · ${w === 20 || w === 24 ? 45 : 60} min`, notes: ["Outdoors on the MTB if daylight allows: skills loop at a trail park. Otherwise Zwift Z2."] }));
+      if (!b2b && w !== 25) s.push(z2Ride("Fri", 45, ftp, { title: "MTB skills or Z2 · 45 min", notes: ["Outdoors on the MTB if daylight allows: skills loop at a trail park. Otherwise Zwift Z2."] }));
       if (w === 25) s.push(z2Ride("Thu", 45, ftp, { addBlocks: [{ name: "Openers", detail: `3 × 1 min at ${pw(105, 110, ftp)}` }] }));
+      if (w === 24) s.push(mobilityTest("Sat"));
       const sat = { 17: 180, 18: 180, 19: 180, 20: 120, 21: 180, 22: 210, 23: 165, 24: 150, 25: 90 }[w];
-      s.push(longRide("Sat", sat, ftp, { mtb: true, notes: w === 19 ? ["Checkpoint: 3 h outdoors on the MTB, comfortable."] : w === 23 ? ["Sabie simulation: race bike setup, race food, race kit."] : [] }));
+      s.push(longRide("Sat", sat, ftp, { mtb: true, ss: [17, 18, 22].includes(w), notes: w === 19 ? ["Checkpoint: 3 h outdoors on the MTB, comfortable."] : w === 23 ? ["Sabie simulation: race bike setup, race food, race kit."] : [] }));
       if (b2b) s.push(longRide("Sun", w === 23 ? 120 : 90, ftp, { mtb: true, b2b: true }));
-      if (w === 24) s.push(mobilityTest("Sun"));
     }
   }
 
-  // ── Phase 4 · Recover (W27–28) ──
+  // ── Recover (W27–28) ──
   else if (w <= 28) {
     s.push(swimAerobic("Tue", { imLvl: 1, main: [{ name: "Any stroke", detail: "Swim what you feel like, easy" }], minutes: 35, rpe: 3, title: "Easy swim · 35 min" }));
-    s.push(strengthSession("Wed", "Light full body (KB)", kbA(2), 30, 4));
+    s.push(gym ? strengthSession("Wed", "Gym · light full body 2 × 8", gymHeavy(2, "8", "RIR 4"), 40, 4) : strengthSession("Wed", "Light full body (KB)", kbA(2), 30, 4));
     s.push(z2Ride("Thu", 45, ftp, { title: "Easy spin · 45 min", rpe: 2 }));
     s.push(longRide("Sat", 90, ftp, { mtb: true, title: "Fun MTB ride · ~90 min", rpe: 3, notes: ["No targets. Ride somewhere you enjoy."] }));
   }
 
-  // ── Phase 5 · Gym Ramp (W29–32) ──
-  else if (w <= 32) {
-    if (w === 32) {
-      s.push(gym ? gymTestSession("Mon") : kbTestSession("Mon"));
-      s.push(ftpTest("Tue"));
-      s.push(gym ? strengthSession("Wed", "Gym B (deload)", gymB(2, "5", "RIR 3–4"), 45, 5) : strengthSession("Wed", "Strength B+ (deload)", kbBplus(2), 35, 5));
-      s.push(cssTest("Thu"));
-      s.push(z2Ride("Sat", 90, ftp));
-      s.push(mobilityTest("Sun"));
-    } else {
-      const reps = w === 31 ? "6" : "8"; const rir = w === 31 ? "RIR 2–3" : "RIR 3";
-      if (gym) {
-        s.push(strengthSession("Mon", "Gym A · squat + push", gymA(3, reps, rir), 55, 6, { note: "Technique block: film your top set." }));
-        s.push(strengthSession("Wed", "Gym B · hinge + pull", gymB(3, reps, rir), 55, 6));
-        s.push(strengthSession("Fri", "Gym C · power + volume", gymC(3), 50, 6));
-      } else {
-        s.push(strengthSession("Mon", "Strength A+", kbAplus(3), 40, 7));
-        s.push(strengthSession("Wed", "Strength B+", kbBplus(3), 40, 7));
-        s.push(strengthSession("Fri", "Workout A (volume)", kbA(3), 40, 6));
-      }
-      s.push({
-        29: z2Ride("Tue", 60, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)}` }] }),
-        30: intervals("Tue", "Sweet spot 3 × 10", SS(3, 10), ftp, { minutes: 65, hardMin: 30, rpe: 6 }),
-        31: intervals("Tue", "Threshold 2 × 12", THR(2, 12), ftp, { minutes: 65, hardMin: 24, rpe: 7 }),
-      }[w]);
-      s.push(swimTech("Thu", w, { main: [z2x(4), z3x(4)], flyLvl: 2, minutes: 50, hardMin: 8 }));
-      s.push(z2Ride("Sat", w === 29 ? 90 : 120, ftp, { title: `Long Z2 · ${w === 29 ? "90 min" : "2 h"}` }));
-    }
-  }
-
-  // ── Phase 6 · Winter Strength (W33–42) ──
+  // ── Winter Strength (W29–42) ──
   else if (w <= 42) {
-    const cyc = (w - 33) % 4; // 0,1,2 build, 3 deload (36, 40)
-    const isTest = w === 40;
-    const scheme = [["4", "6", "RIR 2"], ["4", "5", "RIR 2"], ["5", "4", "RIR 1–2"], ["2", "5", "RIR 4"]][w >= 41 ? (w === 41 ? 1 : 2) : cyc];
-    const sets = Number(scheme[0]);
-    if (isTest) {
+    const SCHEME = { 29: [3, "6", "RIR 3"], 30: [4, "6", "RIR 2"], 31: [4, "5", "RIR 2"], 32: [2, "5", "RIR 4"], 33: [4, "6", "RIR 2"], 34: [4, "5", "RIR 2"], 35: [5, "4", "RIR 1–2"], 36: [2, "5", "RIR 4"], 37: [4, "6", "RIR 2"], 38: [4, "5", "RIR 2"], 39: [5, "4", "RIR 1–2"], 41: [4, "5", "RIR 2"], 42: [5, "4", "RIR 1–2"] };
+    const deload = t === "deload";
+    s.push(mondaySwim());
+    if (w === 40) {
       s.push(gym ? gymTestSession("Mon") : kbTestSession("Mon"));
       s.push(ftpTest("Tue"));
       s.push(gym ? strengthSession("Wed", "Gym B (deload)", gymB(2, "5", "RIR 4"), 45, 5) : strengthSession("Wed", "Strength B+ (deload)", kbBplus(2), 35, 5));
       s.push(cssTest("Thu"));
-      s.push(z2Ride("Sat", 120, ftp, { title: "Long Z2 · 2 h", addBlocks: ftp ? [] : [], notes: ["Decoupling check: hold 65–70% FTP steady for the middle 60 min. Record decoupling from Zwift/intervals.icu/Strava."] }));
-      s.push(mobilityTest("Sun"));
+      s.push(mobilityTest("Sat"));
+      s.push(z2Ride("Sat", 120, ftp, { title: "Long Z2 · 2 h", notes: ["Decoupling check: hold 65–70% FTP steady for the middle 60 min, then record decoupling from Zwift, intervals.icu or Strava."] }));
     } else {
+      const [sets, reps, rir] = SCHEME[w];
       if (gym) {
-        s.push(strengthSession("Mon", `Gym A · ${scheme[0]} × ${scheme[1]}`, gymA(sets, scheme[1], scheme[2]), 60, cyc === 3 ? 5 : 8));
-        s.push(strengthSession("Wed", `Gym B · ${scheme[0]} × ${scheme[1]}`, gymB(sets, scheme[1], scheme[2]), 60, cyc === 3 ? 5 : 8));
-        s.push(strengthSession("Fri", "Gym C · power + volume", gymC(cyc === 3 ? 2 : 3), 50, cyc === 3 ? 5 : 7));
+        s.push(strengthSession("Mon", `Gym A · ${sets} × ${reps}`, gymA(sets, reps, rir), 55, deload ? 5 : 8));
+        s.push(strengthSession("Wed", `Gym B · ${sets} × ${reps}`, gymB(sets, reps, rir), 55, deload ? 5 : 8));
+        s.push(strengthSession("Fri", "Gym C · power + volume", gymC(deload ? 2 : 3), 45, deload ? 5 : 7));
       } else {
-        s.push(strengthSession("Mon", "Strength A+", kbAplus(cyc === 3 ? 2 : 3), 40, 7));
-        s.push(strengthSession("Wed", "Strength B+", kbBplus(cyc === 3 ? 2 : 3), 40, 7));
-        s.push(strengthSession("Fri", "Workout A (volume)", kbA(cyc === 3 ? 2 : 3), 40, 6));
+        s.push(strengthSession("Mon", "Strength A+", kbAplus(deload ? 2 : 3), 40, 7));
+        s.push(strengthSession("Wed", "Strength B+", kbBplus(deload ? 2 : 3), 40, 7));
+        s.push(strengthSession("Fri", "Workout A (volume)", kbA(deload ? 2 : 3), 40, 6));
       }
-      const tue = cyc === 3
+      s.push(deload
         ? z2Ride("Tue", 50, ftp, { addBlocks: [{ name: "Openers", detail: `4 × 1 min at ${pw(105, 110, ftp)}` }] })
         : (w % 2 === 0 ? intervals("Tue", "VO2max 5 × 4", VO2(5, 4), ftp, { minutes: 70, hardMin: 20, rpe: 8 })
-          : intervals("Tue", `Threshold 2 × ${w >= 37 ? 20 : 15}`, THR(2, w >= 37 ? 20 : 15), ftp, { minutes: w >= 37 ? 80 : 70, hardMin: w >= 37 ? 40 : 30, rpe: 7 }));
-      s.push(tue);
-      s.push(swimTech("Thu", w, { main: [z3x(cyc === 3 ? 4 : 8)], flyLvl: 3, minutes: 50, hardMin: cyc === 3 ? 6 : 14, rpe: 5, extraBlocks: [{ name: "IM", detail: IM_BLOCK[cyc === 3 ? 1 : 3] }] }));
-      const sat = w >= 41 ? 150 : cyc === 3 ? 90 : 120;
-      s.push(z2Ride("Sat", sat, ftp, { title: `Long Z2 · ${fmtMin(sat)}`, notes: w >= 41 ? ["W2W base starts here. Outdoors on the MTB when the weather allows."] : ["Zwift is fine in winter."] }));
-      s.push(swimAerobic("Sun", { imLvl: 2, main: [PYR], minutes: 45, rpe: 3, title: "Aerobic swim (optional)", optional: true }));
-      s[s.length - 1].optional = true;
+          : intervals("Tue", `Threshold 2 × ${w >= 37 ? 20 : 15}`, THR(2, w >= 37 ? 20 : 15), ftp, { minutes: w >= 37 ? 80 : 70, hardMin: w >= 37 ? 40 : 30, rpe: 7 })));
+      s.push(swimTech("Thu", w, { main: [z3x(deload ? 4 : 8)], flyLvl: 3, minutes: 50, hardMin: deload ? 6 : 14, rpe: 5, extraBlocks: [{ name: "IM", detail: IM_BLOCK[deload ? 1 : 3] }] }));
+      const sat = { 29: 120, 30: 120, 31: 135, 32: 90, 33: 135, 34: 150, 35: 150, 36: 105, 37: 165, 38: 165, 39: 180, 41: 180, 42: 180 }[w];
+      s.push(z2Ride("Sat", sat, ftp, { title: `Long Z2 · ${fmtMin(sat)}`, notes: sat >= 150 ? ["Fuel 60–90 g carbs per hour. Outdoors on the MTB when the weather allows; Zwift is fine otherwise.", ...(w === 39 ? ["Checkpoint: 3 hours steady."] : [])] : ["Zwift is fine in winter."] }));
     }
   }
 
-  // ── Phase 7 · W2W Build (W43–53) ──
+  // ── W2W Build (W43–53) ──
   else if (w <= 53) {
     if (w === 53) {
       s.push(intervals("Mon", "Openers 3 × 1", OPENERS(3, 1), ftp, { minutes: 40, hardMin: 3, rpe: 4 }));
@@ -604,13 +646,13 @@ export function buildWeek(w, ctx = {}) {
       ["Stage 1", "Stage 2", "Stage 3"].forEach((st, i) => s.push({
         slot: ["Thu", "Fri", "Sat"][i], type: "race", title: `Wines2Whales · ${st}`, minutes: [270, 300, 240][i], rpe: 7, hardMin: [60, 70, 50][i],
         blocks: [
-          { name: "Dates", detail: "Placeholder days. Set your edition's real dates in Settings once entries confirm." },
+          { name: "Dates", detail: "Placeholder days until your edition's dates are confirmed." },
           { name: "Pacing", detail: "Ride as a pair at the weaker rider's Z2–Z3. Walk the steep hike-a-bike pinches, don't burn matches." },
           { name: "Fuel", detail: "60–90 g carbs per hour from the start. Recovery meal + protein within an hour of finishing." },
         ],
       }));
     } else if (w === 47) {
-      s.push(gym ? strengthSession("Mon", "Gym A (light) · 2 × 4", gymA(2, "4", "RIR 3"), 45, 5) : strengthSession("Mon", "Strength A+ (light)", kbAplus(2), 35, 5));
+      s.push(gym ? strengthSession("Mon", "Gym · light 2 × 4", gymHeavy(2, "4", "RIR 3"), 40, 5) : strengthSession("Mon", "Strength A+ (light)", kbAplus(2), 35, 5));
       s.push(intervals("Tue", "Openers 3 × 2", OPENERS(3, 2), ftp, { minutes: 45, hardMin: 6, rpe: 5 }));
       s.push(swimAerobic("Wed", { imLvl: 1, main: [z2x(6)], minutes: 40, rpe: 3, title: "Easy swim · 40 min" }));
       ["Fri", "Sat", "Sun"].forEach((d, i) => s.push({
@@ -622,15 +664,11 @@ export function buildWeek(w, ctx = {}) {
       }));
     } else {
       const deload = t === "deload" || t === "recover" || t === "taper";
-      const strengthSets = deload ? 2 : 3;
-      if (gym) {
-        s.push(strengthSession("Mon", `Gym A · maintenance ${strengthSets} × 4`, gymA(strengthSets, "4", deload ? "RIR 3–4" : "RIR 2").filter(b => b.ex !== "pallof"), 45, 7));
-        if (w !== 52) s.push(strengthSession("Thu", `Gym B · maintenance ${strengthSets} × 4`, gymB(strengthSets, "4", deload ? "RIR 3–4" : "RIR 2"), 45, 7));
-      } else {
-        s.push(strengthSession("Mon", "Strength A+ (maintenance)", kbAplus(strengthSets), 35, 7));
-        if (w !== 52) s.push(strengthSession("Thu", "Strength B+ (maintenance)", kbBplus(strengthSets), 35, 7));
-      }
-      const tue = {
+      const sets = deload ? 2 : 3;
+      const peak = [49, 50, 51].includes(w);
+      s.push(gym ? strengthSession("Mon", `Gym · heavy maintenance ${sets} × 4`, gymHeavy(sets, "4", deload ? "RIR 3–4" : "RIR 2"), 45, deload ? 6 : 8) : strengthSession("Mon", "Strength A+ (maintenance)", kbAplus(sets), 35, 7));
+      s.push(mondaySwim(peak));
+      s.push({
         43: intervals("Tue", "Threshold 3 × 12", THR(3, 12), ftp, { minutes: 80, hardMin: 36, rpe: 7 }),
         44: intervals("Tue", "VO2max 5 × 4", VO2(5, 4), ftp, { minutes: 70, hardMin: 20, rpe: 8 }),
         45: intervals("Tue", "Climbing torque 5 × 8", TORQUE(5, 8), ftp, { minutes: 85, hardMin: 40, rpe: 7 }),
@@ -640,26 +678,23 @@ export function buildWeek(w, ctx = {}) {
         50: intervals("Tue", "VO2max 6 × 4", VO2(6, 4), ftp, { minutes: 75, hardMin: 24, rpe: 8 }),
         51: intervals("Tue", "Threshold 2 × 20", THR(2, 20), ftp, { minutes: 80, hardMin: 40, rpe: 7 }),
         52: intervals("Tue", "Taper: race-pace 4 × 2", OPENERS(4, 2), ftp, { minutes: 45, hardMin: 8, rpe: 5 }),
-      }[w];
-      s.push(tue);
-      const peak = [49, 50, 51].includes(w);
-      s.push(swimAerobic("Wed", { imLvl: 2, main: [z3x(deload ? 4 : 6)], minutes: deload ? 40 : 45, rpe: 4, title: peak ? "Swim (optional in peak weeks)" : "Swim · aerobic + IM", hardMin: deload ? 0 : 9 }));
-      if (peak) s[s.length - 1].optional = true;
+      }[w]);
+      s.push(swimAerobic("Wed", { imLvl: 2, main: [z3x(deload ? 4 : 6)], minutes: deload ? 40 : 45, rpe: 4, title: "Swim · aerobic + IM", hardMin: deload ? 0 : 9 }));
+      if (w !== 52) s.push(gym ? strengthSession("Thu", "Gym · power + single-leg", gymPower(sets), 45, 6) : strengthSession("Thu", "Strength B+ (maintenance)", kbBplus(sets), 35, 7));
       const b2b = [44, 49, 51].includes(w);
       if (!b2b) { const fm = deload || w === 45 ? 45 : 60; s.push(z2Ride("Fri", fm, ftp, { title: `MTB skills or Z2 · ${fm} min` })); }
-      const sat = { 43: 180, 44: 180, 45: 210, 46: 120, 48: 90, 49: 210, 50: 240, 51: 210, 52: 120 }[w];
-      s.push(longRide("Sat", sat, ftp, { mtb: true, notes: w === 50 ? ["Longest ride of the plan: W2W queen-stage time on the bike."] : [] }));
-      if (b2b) s.push(longRide("Sun", w === 51 ? 150 : w === 44 ? 90 : 120, ftp, { mtb: true, b2b: true }));
-      if (w === 46) s.push(mobilityTest("Sun"));
+      if (w === 46) s.push(mobilityTest("Sat"));
+      const sat = { 43: 180, 44: 180, 45: 210, 46: 120, 48: 90, 49: 180, 50: 285, 51: 180, 52: 120 }[w];
+      s.push(longRide("Sat", sat, ftp, { mtb: true, notes: w === 50 ? ["Longest ride of the plan: W2W queen-stage time on the bike. Fuel 60–90 g carbs per hour from the first hour."] : [] }));
+      if (b2b) s.push(longRide("Sun", w === 44 ? 90 : 150, ftp, { mtb: true, b2b: true }));
     }
   }
 
-  // ── After the plan: rolling maintenance (summer base pattern) ──
+  // ── After the plan: rolling maintenance (summer-base build weeks) ──
   else {
-    s = buildWeek(9 + ((w - 54) % 8), ctx).map(x => ({ ...x }));
+    s = buildWeek([14, 15, 14, 16][(w - 54) % 4], ctx).map(x => ({ ...x }));
   }
 
-  // ids + day order
   s = s.filter(Boolean).sort((a, b) => DAYS.indexOf(a.slot) - DAYS.indexOf(b.slot));
   s.forEach((x, i) => { x.id = `w${w}-${i}`; x.week = w; });
   return s;
@@ -669,17 +704,21 @@ export const TYPE_META = {
   strength: { label: "Strength", emoji: "💪", color: "#FF6B35" },
   bike: { label: "Bike", emoji: "🚴", color: "#00D4FF" },
   swim: { label: "Swim", emoji: "🏊", color: "#00FF9D" },
+  run: { label: "Run", emoji: "🏃", color: "#38BDF8" },
   test: { label: "Test", emoji: "🎯", color: "#FBBF24" },
   race: { label: "Race", emoji: "🏁", color: "#FF4D6D" },
   mobility: { label: "Mobility", emoji: "🧘", color: "#A78BFA" },
 };
 
 export const RESEARCH_NOTES = [
-  { title: "Intensity mostly easy", text: "Endurance athletes improve most with roughly 80% of training at low intensity and 20% hard (Seiler 2010; Stöggl & Sperlich 2014). The app tracks your easy share each week." },
-  { title: "Strength and endurance mix well", text: "An updated meta-analysis found concurrent training does not blunt maximal strength or muscle growth; explosive strength suffers most when both are in the same session (Schumann et al. 2022). Cycling interferes less than running (Wilson et al. 2012). Heavy lifts and bike intervals sit on different days." },
-  { title: "Lifting makes you a better cyclist", text: "Heavy strength training improves cycling economy and late-race power in trained cyclists (Rønnestad & Mujika 2014). That's why strength never stops in summer." },
-  { title: "Maintenance is cheap", text: "Strength holds on 1–2 sessions a week if the load stays heavy; endurance holds with ~2 sessions a week if intensity is kept (Spiering et al. 2021). That makes the summer/winter emphasis work." },
-  { title: "Mobility through full range", text: "Strength training through full range of motion improves flexibility about as much as stretching (Afonso et al. 2021). Add ~10 min of targeted mobility on most days." },
+  { title: "Mostly easy, but not dogmatic", text: "Endurance athletes do well with roughly 80% of training easy and 20% hard (Seiler 2010; Stöggl & Sperlich 2014). That evidence comes mostly from athletes training 10+ hours a week. At 6–9 hours, sweet spot and threshold are time-efficient, so the target here is 75–80% easy and the long rides from February carry two sweet-spot blocks." },
+  { title: "Strength and endurance mix well", text: "An updated meta-analysis found concurrent training does not blunt maximal strength or muscle growth; explosive strength suffers most when both are in the same session (Schumann et al. 2022). Cycling interferes less than running (Wilson et al. 2012). Heavy legs and bike intervals sit on different days." },
+  { title: "Lifting makes you a better cyclist", text: "Heavy strength training improves cycling economy and late-race power in trained cyclists (Rønnestad & Mujika 2014). That's why a heavy Monday stays in all year." },
+  { title: "Keep the load heavy", text: "Strength holds on 1–2 sessions a week if intensity stays high; endurance holds on ~2 sessions a week if one keeps its intensity (Spiering et al. 2021). Gym access from January means strength keeps building through summer, not only in winter." },
+  { title: "Fuel the work", text: "Training hard on too little food (low energy availability) blunts adaptation and raises injury and illness risk (IOC consensus on REDs, Mountjoy et al. 2023). Move to maintenance calories once your weekly average is under 85 kg, and take 60–90 g carbs an hour on rides over 90 minutes." },
+  { title: "Sleep rule", text: "Sleep loss impairs endurance performance, strength and recovery (Fullagar et al. 2015). Under 6 hours of sleep or readiness 2 or lower: today's hard session becomes easy, or rest." },
+  { title: "Mobility: useful, not magic", text: "Full-range strength training improves range of motion about as much as stretching (Afonso et al. 2021). Evidence that mobility routines prevent injury is weak, so the 10-minute routine is a 3-days-a-week extra, not a core session." },
+  { title: "Holiday running", text: "Novice runners who increase weekly distance by more than about 30% get more distance-related injuries (Nielsen et al. 2014), so the holiday runs grow about 10% a week. A month off the bike costs some VO2max and power (Mujika & Padilla 2000); running keeps much of the general aerobic fitness." },
   { title: "Taper", text: "Cutting volume ~40–60% over 1–2 weeks while keeping intensity gives the best race-day performance (Bosquet et al. 2007)." },
-  { title: "Load and progression", text: "Session effort (1–10) × minutes is a validated way to track training load (Foster et al. 2001). Avoid big week-to-week jumps; the app flags a week >20% above your recent average." },
+  { title: "Load and progression", text: "Session effort (1–10) × minutes is a validated way to track training load (Foster et al. 2001). Avoid big week-to-week jumps; the app flags a week more than 20% above your recent average." },
 ];

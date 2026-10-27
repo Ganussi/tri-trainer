@@ -16,9 +16,9 @@ export const TEST_DEFS = {
   goblet20: { label: "20 kg goblet squat (3 s down)", unit: "reps", better: "up", group: "Strength", target: "20+ means move on" },
   press20: { label: "20 kg press (weaker side)", unit: "reps", better: "up", group: "Strength", target: "8+ per side" },
   swings5: { label: "20 kg swings in 5 min", unit: "reps", better: "up", group: "Strength", target: "100+" },
-  e1rm_squat: { label: "Back squat e1RM", unit: "kg", better: "up", group: "Gym", target: "Set after week 32" },
-  e1rm_trapbar: { label: "Trap-bar deadlift e1RM", unit: "kg", better: "up", group: "Gym", target: "Set after week 32" },
-  e1rm_bench: { label: "Bench press e1RM", unit: "kg", better: "up", group: "Gym", target: "Set after week 32" },
+  e1rm_squat: { label: "Back squat e1RM", unit: "kg", better: "up", group: "Gym", target: "First numbers in week 16" },
+  e1rm_trapbar: { label: "Trap-bar deadlift e1RM", unit: "kg", better: "up", group: "Gym", target: "First numbers in week 16" },
+  e1rm_bench: { label: "Bench press e1RM", unit: "kg", better: "up", group: "Gym", target: "First numbers in week 16" },
   pullup: { label: "Pull-up max reps", unit: "reps", better: "up", group: "Gym", target: "10+" },
   ktw: { label: "Knee-to-wall (worse side)", unit: "cm", better: "up", group: "Mobility", target: "≥ 10 cm" },
   ktwgap: { label: "Knee-to-wall side gap", unit: "cm", better: "down", group: "Mobility", target: "< 2 cm" },
@@ -116,7 +116,7 @@ export function currentCss(v2) { return latest(v2, "css") || DEFAULT_CSS; }
 export function cssIsStale(v2) { return !latest(v2, "css"); }
 
 // ── Weekly process KPIs ─────────────────────────────────────
-const ENDURANCE = ["bike", "swim", "race"];
+const ENDURANCE = ["bike", "swim", "race", "run"];
 export function weekSummary(v2, w, ctx) {
   const plan = buildWeek(w, ctx);
   const logs = v2.logs || {};
@@ -164,9 +164,12 @@ export function warnings(v2, ctx, legacy) {
     const last3 = [0, 1, 2].map(i => daily[addDays(today, -i)]?.rhr).map(Number);
     if (last3.every(x => x && x >= b + 5)) out.push({ level: "red", text: `Resting HR is ${Math.round(avg(last3) - b)} bpm above your baseline for 3 days. Likely fatigue or illness: make today easy or rest.` });
   }
-  // 2 · Readiness ≤2 two days running
-  const r0 = daily[today]?.ready, r1 = daily[addDays(today, -1)]?.ready;
-  if (r0 && r1 && r0 <= 2 && r1 <= 2) out.push({ level: "amber", text: "Readiness low two days running. Swap today's hard session for an easy one or rest." });
+  // 2 · Sleep rule: under 6 h sleep or readiness ≤ 2 → today's hard session goes easy
+  const t0 = daily[today];
+  if (t0 && ((t0.sleep != null && t0.sleep !== "" && Number(t0.sleep) < 6) || (t0.ready && t0.ready <= 2))) {
+    const why = t0.sleep != null && t0.sleep !== "" && Number(t0.sleep) < 6 ? `${t0.sleep} h sleep` : `readiness ${t0.ready}/5`;
+    out.push({ level: "amber", text: `Sleep rule (${why}): today's hard session becomes easy Z2, an easy swim, or rest. Lifting: drop to 2 sets at RIR 3+.` });
+  }
   // 3 · Same pain area in the last two logs (sessions or check-ins)
   const painEvents = [];
   Object.entries(daily).forEach(([d, e]) => { if (e?.pain?.length) painEvents.push({ date: d, areas: e.pain }); });
@@ -199,9 +202,16 @@ export function warnings(v2, ctx, legacy) {
     const dd = (parseDate(bt) - parseDate(today)) / 86400000;
     if (dd >= 0 && dd <= 5) out.push({ level: "red", text: `Blood test in ${dd} day${dd === 1 ? "" : "s"}: no lifting or hard intervals until after the draw. Easy Z2 only.` });
   }
-  // 7 · Missing baselines
-  if (!currentFtp(v2, legacy) && cw >= 4) out.push({ level: "info", text: "No FTP recorded yet. Do the Zwift ramp test so bike zones show watts." });
-  if (cssIsStale(v2) && cw >= 4) out.push({ level: "info", text: "Swim zones still use your old 1:53 CSS. Do the CSS test." });
+  // 7 · Back from the December holiday: zones are from November
+  if (cw >= 10 && cw <= 11) {
+    const back = weekStartDate(10);
+    const fs = series(v2, "ftp"), cs = series(v2, "css");
+    if (fs.length && fs[fs.length - 1].date < back) out.push({ level: "info", text: "Bike zones still use your November FTP. After a month off the bike, ride by feel at the low end until the week 11 ramp test." });
+    if (cs.length && cs[cs.length - 1].date < back) out.push({ level: "info", text: "Swim zones still use your November CSS. Expect to be a few seconds slower until the week 11 CSS test." });
+  }
+  // 8 · Missing baselines
+  if (!currentFtp(v2) && cw >= 4 && (cw < 5 || cw > 9)) out.push({ level: "info", text: "No FTP recorded yet. Do the Zwift ramp test so bike zones show watts." });
+  if (cssIsStale(v2) && cw >= 4 && (cw < 5 || cw > 9)) out.push({ level: "info", text: "Swim zones still use your old 1:53 CSS. Do the CSS test." });
   return out;
 }
 

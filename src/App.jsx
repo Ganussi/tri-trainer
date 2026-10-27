@@ -212,8 +212,9 @@ export default function App() {
                     onTest={() => setModal({ kind: "test", testKind: sel.test, s: sel })} />
                   {(sel.type === "bike" || sel.test === "ftp") && <BikeZones ftp={ftp} />}
                   {(sel.type === "swim" || sel.test === "css") && <SwimZonesCard css={css} stale={cssIsStale(v2)} />}
+                  {sel.type === "run" && <Note color="#38BDF8">Run easy enough to talk in full sentences. Walk breaks are part of the plan, not a failure.</Note>}
                   {sel.cues && <Collapse title={`🎯 ${sel.stroke} cues`}>{sel.cues.map((c, i) => <Line key={i}>· {c}</Line>)}</Collapse>}
-                  <Collapse title="🧘 Mobility 10 (most days)">
+                  <Collapse title="🧘 Mobility 10 (3+ days a week)">
                     {MOBILITY_ROUTINE.map((m, i) => <Row key={i} name={m.name} right={m.detail} />)}
                     <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", marginTop: 8 }}>After a ride or swim, or in the evening. Tick it in the daily check-in.</div>
                   </Collapse>
@@ -459,8 +460,8 @@ function KpiTab({ v2, ctx, todayWeek, ftp, css, onRecord }) {
         <KCard label="Sessions done" value={`${cur.done}/${cur.planned}`} sub={isCur ? `${due} due before today · target ≥ 80%` : "Target ≥ 80%"} color={due === 0 ? "#888" : good(compDue >= 0.8, compDue >= 0.6)} />
         <KCard label="Hours" value={`${(cur.doneMin / 60).toFixed(1)} / ${(cur.plannedMin / 60).toFixed(1)}`} sub="done / planned" color="#00D4FF" />
         <KCard label="Load (effort × min)" value={cur.load} sub={ramp == null ? "vs 3-wk avg: –" : `${ramp >= 0 ? "+" : ""}${Math.round(ramp * 100)}% vs 3-wk avg`} color={ramp == null ? "#888" : good(ramp <= 0.2, ramp <= 0.3)} />
-        <KCard label="Easy share (bike+swim)" value={pctTxt(cur.easyShare)} sub="Target ~80%" color={cur.easyShare == null ? "#888" : good(cur.easyShare >= 0.75, cur.easyShare >= 0.65)} />
-        <KCard label="Mobility days" value={`${cur.mobilityDays}/7`} sub="Target 4+ a week" color={good(perDay(cur.mobilityDays) >= 4 / 7, perDay(cur.mobilityDays) >= 2 / 7)} />
+        <KCard label="Easy share (endurance)" value={pctTxt(cur.easyShare)} sub="Target 75–80%" color={cur.easyShare == null ? "#888" : good(cur.easyShare >= 0.72, cur.easyShare >= 0.65)} />
+        <KCard label="Mobility days" value={`${cur.mobilityDays}/7`} sub="Target 3+ a week" color={good(perDay(cur.mobilityDays) >= 3 / 7, perDay(cur.mobilityDays) >= 1 / 7)} />
         <KCard label="Protein target days" value={`${cur.proteinDays}/7`} sub="160 g · target 5+" color={good(perDay(cur.proteinDays) >= 5 / 7, perDay(cur.proteinDays) >= 3 / 7)} />
         <KCard label="Sleep avg" value={cur.sleep ? `${cur.sleep.toFixed(1)} h` : "–"} sub="Target 7+" color={cur.sleep == null ? "#888" : good(cur.sleep >= 7, cur.sleep >= 6)} />
         <KCard label="Readiness avg" value={cur.ready ? `${cur.ready.toFixed(1)}/5` : "–"} sub={cur.rhr ? `RHR ${Math.round(cur.rhr)} bpm` : "from check-ins"} color={cur.ready == null ? "#888" : good(cur.ready >= 3.5, cur.ready >= 2.5)} />
@@ -674,11 +675,11 @@ function SettingsModal({ settings, ftp, css, onClose, onSave }) {
   return (
     <Sheet title="SETTINGS" sub={`Current FTP ${ftp ? ftp + " W" : "not set"} · CSS ${secToMMSS(css)}/100m (from tests)`} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        <Toggle on={gym} onClick={() => setGym(!gym)} wide>Gym access from May 2027 (barbell winter block)</Toggle>
+        <Toggle on={gym} onClick={() => setGym(!gym)} wide>Gym access from January 2027</Toggle>
         <Toggle on={hr} onClick={() => setHr(!hr)} wide>I have a heart rate strap or watch</Toggle>
       </div>
       <Field label="Next blood test date (no lifting or intervals 5 days before)"><input type="date" value={bloodTest} onChange={e => setBloodTest(e.target.value)} style={inp} /></Field>
-      <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 14 }}>Without gym access, the winter block uses the harder kettlebell sessions instead; you'll hit a ceiling at 20 kg.</div>
+      <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 14 }}>Without gym access, the gym sessions switch to the harder kettlebell sessions; you'll hit a ceiling at 20 kg.</div>
       <button onClick={() => onSave({ gym, hr, bloodTest })} style={{ ...btn("#fff", "#000"), width: "100%", fontSize: 19 }}>SAVE</button>
     </Sheet>
   );
