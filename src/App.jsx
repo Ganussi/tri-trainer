@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
-  buildWeek, PHASES, phaseOf, weekType, WEEK_TYPE_META, TYPE_META, MILESTONES, RESEARCH_NOTES, MOBILITY_ROUTINE,
+  Dumbbell, Bike, Waves, Footprints, Timer, Flag, Settings, House, CalendarDays, ChartColumn,
+  ChevronRight, ChevronLeft, ChevronDown, Check, TriangleAlert, Info, Sun, X, Plus, Activity, Video, Lightbulb,
+} from "lucide-react";
+import {
+  buildWeek, PHASES, phaseOf, weekType, WEEK_TYPE_META, MILESTONES, RESEARCH_NOTES, MOBILITY_ROUTINE,
   BIKE_ZONES, swimZones, secToMMSS, weekStartDate, weekOfDate, addDays, todayStr, shortDate, DAYS, TOTAL_WEEKS, PLAN_START,
 } from "./program.js";
 import {
-  TEST_DEFS, TEST_GROUPS, TEST_FORMS, resultsFromForm, series, latest, currentFtp, currentCss, cssIsStale,
-  weekSummary, rampPct, warnings, e1rm,
+  TEST_DEFS, TEST_GROUPS, TEST_FORMS, resultsFromForm, series, currentFtp, currentCss, cssIsStale,
+  weekSummary, rampPct, warnings,
 } from "./kpi.js";
 
 const SUPABASE_URL = "https://lsnqafebaimgdjskiqbo.supabase.co";
@@ -51,10 +55,105 @@ async function dbSave(data) {
 // The season plan lives under `v2`; the old 72-day fields (logs, currentDay, benchmarks) are kept untouched.
 const V2_DEFAULT = { logs: {}, daily: {}, tests: [], settings: { gym: true, hr: false, bloodTest: "", weight: 87 } };
 const LOCAL_KEY = "tri_v3";
-const FONT = "Barlow,sans-serif";
-const COND = "'Barlow Condensed','Impact',sans-serif";
 const PAIN_AREAS = ["Knee", "Lower back", "Shoulder", "Hip", "Calf/Achilles", "Other"];
-const RPE_LABELS = { 1: "Very easy", 2: "Easy", 3: "Moderate", 4: "Somewhat hard", 5: "Hard", 6: "Hard+", 7: "Very hard", 8: "Very hard+", 9: "Near max", 10: "Max" };
+const RPE_LABELS = { 1: "Very easy", 2: "Easy", 3: "Moderate", 4: "Somewhat hard", 5: "Hard", 6: "Hard", 7: "Very hard", 8: "Very hard", 9: "Near max", 10: "Max" };
+const DAY_NAMES = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
+
+// Discipline look: line icon + colour token (defined in CSS for light and dark)
+const KIND = {
+  strength: { label: "Strength", Icon: Dumbbell, c: "var(--strength)" },
+  bike: { label: "Bike", Icon: Bike, c: "var(--bike)" },
+  swim: { label: "Swim", Icon: Waves, c: "var(--swim)" },
+  run: { label: "Run", Icon: Footprints, c: "var(--run)" },
+  test: { label: "Test", Icon: Timer, c: "var(--test)" },
+  race: { label: "Race", Icon: Flag, c: "var(--race)" },
+  mobility: { label: "Mobility", Icon: Activity, c: "var(--mob)" },
+};
+
+const CSS = `
+:root{
+  --bg:#F2F2F7; --card:#FFFFFF; --fill:rgba(118,118,128,.12); --fill2:rgba(118,118,128,.20);
+  --sep:rgba(60,60,67,.18); --label:#000000; --label2:#55555B; --label3:#6E6E73;
+  --tint:#0062CC; --tint-fill:#0066D6; --on-tint:#FFFFFF;
+  --strength:#C2410C; --bike:#0062CC; --swim:#0B7A4B; --run:#4F46C8; --test:#8B3FC2; --race:#C8102E; --mob:#0B6E7E;
+  --good:#1E7F3C; --warn:#A35400; --bad:#C8102E;
+  --bar:rgba(249,249,249,.88); --overlay:rgba(0,0,0,.35); color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000000; --card:#1C1C1E; --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.36);
+    --sep:rgba(84,84,88,.65); --label:#FFFFFF; --label2:#AEAEB2; --label3:#98989F;
+    --tint:#0A84FF; --tint-fill:#0A84FF; --on-tint:#FFFFFF;
+    --strength:#FF9F0A; --bike:#409CFF; --swim:#30D158; --run:#8E8CFF; --test:#C77DFF; --race:#FF6961; --mob:#64D2FF;
+    --good:#30D158; --warn:#FFB340; --bad:#FF6961;
+    --bar:rgba(22,22,24,.88); --overlay:rgba(0,0,0,.6); color-scheme:dark;
+  }
+}
+html{font-size:106.25%;-webkit-text-size-adjust:100%}
+@supports (font: -apple-system-body){html{font:-apple-system-body}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--label);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.35;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:inherit}
+input,textarea,select{font:inherit;color:var(--label)}
+:focus-visible{outline:2px solid var(--tint);outline-offset:2px;border-radius:8px}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:720px;margin:0 auto;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+.hdr{padding:calc(env(safe-area-inset-top) + 20px) 4px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.large{font-size:2rem;line-height:1.2;font-weight:700;letter-spacing:-.02em}
+.t2{font-size:1.294rem;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.t3{font-size:1.176rem;line-height:1.25;font-weight:600}
+.hl{font-size:1rem;font-weight:600}
+.body{font-size:1rem}
+.callout{font-size:.941rem}
+.sub{font-size:.882rem;line-height:1.35}
+.foot{font-size:.765rem;line-height:1.35}
+.cap{font-size:.706rem;line-height:1.3}
+.l2{color:var(--label2)} .l3{color:var(--label3)}
+.sect{margin:24px 4px 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.card{background:var(--card);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:48px;padding:11px 16px;position:relative;width:100%}
+.row + .row::before,.rowsep::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep);transform:scaleY(.6)}
+.row.ind + .row.ind::before{left:60px}
+.grow{flex:1;min-width:0}
+.chev{color:var(--label3);flex-shrink:0}
+.iconchip{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn{min-height:50px;border-radius:12px;padding:0 16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--tint-fill);color:var(--on-tint)}
+.btn-fill{background:var(--fill);color:var(--tint)}
+.btn-plain{color:var(--tint);min-height:44px;padding:0 8px}
+.iconbtn{width:44px;height:44px;border-radius:22px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--tint);flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:.765rem;font-weight:600;white-space:nowrap}
+.strip{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.strip::-webkit-scrollbar{display:none}
+.day{flex:1 1 0;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;border-radius:12px}
+.day.sel{background:var(--card);box-shadow:0 0 0 2px var(--tint)}
+.dot{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:40}
+.tabbar-in{display:flex;width:100%;max-width:720px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;min-height:50px;color:var(--label3);font-size:.647rem;font-weight:500}
+.tab.on{color:var(--tint)}
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:60;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--bg);border-radius:14px 14px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.8,.2,1)}
+.grabber{width:36px;height:5px;border-radius:3px;background:var(--fill2);margin:0 auto 8px}
+.field{display:block;width:100%;min-height:48px;padding:12px 14px;border:0;border-radius:10px;background:var(--card);font-size:1rem;outline:none}
+.label{font-size:.882rem;color:var(--label2);margin:16px 4px 6px;display:block}
+.seg{display:grid;gap:6px}
+.segbtn{min-height:44px;border-radius:10px;background:var(--card);font-weight:600;text-align:center}
+.segbtn.on{background:var(--tint-fill);color:var(--on-tint)}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;background:var(--card);font-size:.941rem;text-align:center}
+.chip.on{background:var(--bad);color:#fff}
+.switch{width:51px;height:31px;border-radius:16px;background:var(--fill2);position:relative;flex-shrink:0;transition:background .2s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.switch.on{background:#34C759}.switch.on::after{transform:translateX(20px)}
+.bar-track{height:8px;border-radius:4px;overflow:hidden;display:flex;background:var(--fill)}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--card);border-radius:14px;padding:14px 16px}
+.big{font-size:1.765rem;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+@media(min-width:768px){.kgrid4{grid-template-columns:repeat(4,1fr)}}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+`;
 
 export default function App() {
   const [store, setStore] = useState({});
@@ -102,506 +201,609 @@ export default function App() {
     });
   }
 
-  const legacy = store.benchmarks;
-  const ftp = currentFtp(v2, legacy);
+  const ftp = currentFtp(v2);
   const css = currentCss(v2);
   const ctx = { ftp, gym: v2.settings.gym };
   const today = todayStr();
   const todayWeek = Math.min(Math.max(weekOfDate(today), 1), TOTAL_WEEKS + 8);
+  const preStart = today < PLAN_START;
 
   const [tab, setTab] = useState("today");
   const [viewWeek, setViewWeek] = useState(todayWeek);
   const [selId, setSelId] = useState(null);
-  const [modal, setModal] = useState(null); // {kind:'log'|'test'|'settings'|'checkin', ...}
+  const [modal, setModal] = useState(null);
 
   const week = useMemo(() => buildWeek(viewWeek, ctx), [viewWeek, ftp, v2.settings.gym]);
   const phase = phaseOf(viewWeek);
   const wType = weekType(viewWeek);
-  const preStart = today < PLAN_START;
 
   const defaultSel = useMemo(() => {
     const dow = (new Date().getDay() + 6) % 7;
     const open = week.filter(s => !v2.logs[s.id]);
-    if (viewWeek !== todayWeek || todayStr() < PLAN_START) return (open[0] || week[0])?.id;
+    if (viewWeek !== todayWeek || preStart) return (open[0] || week[0])?.id;
     return (open.find(s => DAYS.indexOf(s.slot) >= dow) || open[0] || week[week.length - 1])?.id;
-  }, [week, v2.logs, viewWeek, todayWeek]);
+  }, [week, v2.logs, viewWeek, todayWeek, preStart]);
   const sel = week.find(s => s.id === selId) || week.find(s => s.id === defaultSel);
-
-  const warns = useMemo(() => warnings(v2, ctx, legacy), [v2, ftp]);
+  const warns = useMemo(() => warnings(v2, ctx), [v2, ftp]);
 
   function logDate(s) {
-    const d = weekStartDate(s.week);
-    const planned = addDays(d, DAYS.indexOf(s.slot));
+    const planned = addDays(weekStartDate(s.week), DAYS.indexOf(s.slot));
     return s.week === todayWeek ? today : planned;
   }
   function saveLog(s, data) { updateV2(v => { v.logs[s.id] = { ...data, date: data.date || logDate(s), week: s.week, type: s.type }; }); setModal(null); }
-  function quickDone(s) { saveLog(s, { status: "done", min: s.minutes, rpe: s.rpe, quick: true }); }
-  function skip(s) { saveLog(s, { status: "skipped" }); }
-  function undo(s) { updateV2(v => { delete v.logs[s.id]; }); }
+  const quickDone = s => saveLog(s, { status: "done", min: s.minutes, rpe: s.rpe, quick: true });
+  const skip = s => saveLog(s, { status: "skipped" });
+  const undo = s => updateV2(v => { delete v.logs[s.id]; });
   function saveTests(kind, date, results) {
     updateV2(v => { Object.entries(results).forEach(([key, value]) => v.tests.push({ id: `${key}-${Date.now()}`, date, key, value, kind })); });
   }
-  function saveDaily(date, entry) { updateV2(v => { v.daily[date] = { ...(v.daily[date] || {}), ...entry }; }); }
+  const saveDaily = (date, entry) => updateV2(v => { v.daily[date] = { ...(v.daily[date] || {}), ...entry }; });
 
   if (syncStatus === "loading") return (
-    <div style={{ fontFamily: COND, background: "#0a0a0a", minHeight: "100vh", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-      <div style={{ fontSize: 40 }}>🚴</div>
-      <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 2 }}>LOADING...</div>
-    </div>
+    <>
+      <style>{CSS}</style>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+        <div className="iconchip" style={{ width: 56, height: 56, borderRadius: 14, background: "var(--fill)", color: "var(--tint)" }}><Bike size={28} /></div>
+        <div className="sub l2">Loading your plan…</div>
+      </div>
+    </>
   );
 
-  const weekDone = week.filter(s => !s.optional && v2.logs[s.id]?.status === "done").length;
-  const weekReq = week.filter(s => !s.optional).length;
-  const checkinToday = v2.daily[today];
+  const weekReq = week.filter(s => !s.optional);
+  const weekDone = weekReq.filter(s => v2.logs[s.id]?.status === "done").length;
+  const checkin = v2.daily[today];
 
   return (
-    <div style={{ fontFamily: COND, background: "#0a0a0a", minHeight: "100vh", color: "#fff", maxWidth: 430, margin: "0 auto" }} className="app-root">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{display:none}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        .fu{animation:fadeUp 0.3s ease both}
-        button{cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
-        input,textarea,select{font-family:Barlow,sans-serif}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .pulsing{animation:pulse 1.5s ease infinite}
-        .two-col{display:block}
-        @media(min-width:768px){
-          .app-root{max-width:900px !important}
-          .header-inner{padding:40px 40px 16px !important}
-          .scroll-area{padding:0 40px 110px !important}
-          .two-col{display:grid !important; grid-template-columns:1fr 1fr; gap:20px; align-items:start}
-          .bottom-nav{max-width:900px !important}
-        }
-      `}</style>
-
-      {/* Header */}
-      <div style={{ padding: "48px 20px 14px", background: "linear-gradient(180deg,#111 0%,#0a0a0a 100%)" }} className="header-inner">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11, letterSpacing: 3, color: "#888", fontFamily: FONT, textTransform: "uppercase" }}>
-              {tab === "today" ? `Week ${viewWeek} of ${TOTAL_WEEKS} · ${shortDate(weekStartDate(viewWeek))}–${shortDate(addDays(weekStartDate(viewWeek), 6))}` : tab === "plan" ? "Nov 2026 – Nov 2027" : "Key performance indicators"}
-            </div>
-            <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: -1, lineHeight: 1.05 }}>
-              {tab === "today" ? (phase ? phase.name.toUpperCase() : "MAINTENANCE") : tab === "plan" ? "SEASON PLAN" : "KPIs"}
-            </div>
-            {tab === "today" && (
-              <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                <Badge color={WEEK_TYPE_META[wType].color}>{WEEK_TYPE_META[wType].label}</Badge>
-                <Badge color="#888">{weekDone}/{weekReq} done</Badge>
-                {phase && <Badge color={phase.color}>{phase.season}</Badge>}
-              </div>
-            )}
-          </div>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <button onClick={() => setModal({ kind: "settings" })} aria-label="Settings" style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, width: 38, height: 38, color: "#aaa", fontSize: 18 }}>⚙</button>
-            <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-              <div className={syncStatus === "saving" ? "pulsing" : ""} style={{ width: 6, height: 6, borderRadius: "50%", background: syncStatus === "synced" ? "#00FF9D" : syncStatus === "saving" ? "#FBBF24" : "#FF4444" }} />
-              <span style={{ fontFamily: FONT, fontSize: 10, color: "#555" }}>{syncStatus}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: "0 20px 110px" }} className="scroll-area">
+    <>
+      <style>{CSS}</style>
+      <div className="app">
         {tab === "today" && (
-          <div className="fu">
-            {preStart && viewWeek === 1 && <Note color="#A78BFA">The season plan starts Monday 2 November. Keep doing Workouts A & B until then; you can browse and pre-read week 1 here.</Note>}
-            {warns.map((w, i) => <Note key={i} color={w.level === "red" ? "#FF4D6D" : w.level === "amber" ? "#FBBF24" : "#00D4FF"}>{w.text}</Note>)}
-
-            {viewWeek === todayWeek && !preStart && (
-              <button onClick={() => setModal({ kind: "checkin" })} style={{ width: "100%", marginTop: 12, padding: "12px 14px", background: checkinToday ? "#121212" : "#1a1530", border: `1px solid ${checkinToday ? "#222" : "#A78BFA55"}`, borderRadius: 12, color: "#ddd", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: FONT, fontSize: 14 }}>
-                <span>{checkinToday ? `✓ Check-in · readiness ${checkinToday.ready || "–"}/5${checkinToday.sleep ? ` · ${checkinToday.sleep} h sleep` : ""}${checkinToday.mobility ? " · mobility ✓" : ""}` : "☀️ Daily check-in · 10 seconds"}</span>
-                <span style={{ color: "#888" }}>{checkinToday ? "edit" : "›"}</span>
-              </button>
-            )}
-
-            {/* Week strip */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14 }}>
-              <NavBtn disabled={viewWeek <= 1} onClick={() => { setViewWeek(viewWeek - 1); setSelId(null); }}>←</NavBtn>
-              <div style={{ flex: 1, display: "flex", gap: 4, minWidth: 0 }}>
-                {week.map(s => {
-                  const l = v2.logs[s.id]; const m = TYPE_META[s.type]; const isSel = sel && s.id === sel.id;
-                  return (
-                    <button key={s.id} onClick={() => setSelId(s.id)} style={{ flex: "1 1 0", minWidth: 0, background: "none", border: "none", padding: 0 }}>
-                      <div style={{ fontSize: 9, color: isSel ? "#fff" : "#777", fontFamily: FONT, marginBottom: 3, letterSpacing: 1, textAlign: "center" }}>{s.slot.toUpperCase()}</div>
-                      <div style={{ height: 40, borderRadius: 8, background: l?.status === "done" ? m.color : l?.status === "skipped" ? "#1e1e1e" : isSel ? m.color + "33" : "#181818", border: isSel ? `2px solid ${m.color}` : s.optional ? "2px dashed #333" : "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>
-                        {l?.status === "done" ? "✓" : l?.status === "skipped" ? "–" : m.emoji}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <NavBtn disabled={viewWeek >= TOTAL_WEEKS + 8} onClick={() => { setViewWeek(viewWeek + 1); setSelId(null); }}>→</NavBtn>
-            </div>
-            {viewWeek !== todayWeek && <button onClick={() => { setViewWeek(todayWeek); setSelId(null); }} style={{ marginTop: 8, background: "none", border: "none", color: "#00D4FF", fontFamily: FONT, fontSize: 13 }}>↺ Back to this week</button>}
-
-            {sel && (
-              <div className="two-col">
-                <div><SessionCard s={sel} log={v2.logs[sel.id]} /></div>
-                <div>
-                  <SessionActions s={sel} log={v2.logs[sel.id]}
-                    onLog={() => setModal({ kind: "log", s: sel })} onQuick={() => quickDone(sel)} onSkip={() => skip(sel)} onUndo={() => undo(sel)}
-                    onTest={() => setModal({ kind: "test", testKind: sel.test, s: sel })} />
-                  {(sel.type === "bike" || sel.test === "ftp") && <BikeZones ftp={ftp} />}
-                  {(sel.type === "swim" || sel.test === "css") && <SwimZonesCard css={css} stale={cssIsStale(v2)} />}
-                  {sel.type === "run" && <Note color="#38BDF8">Run easy enough to talk in full sentences. Walk breaks are part of the plan, not a failure.</Note>}
-                  {sel.cues && <Collapse title={`🎯 ${sel.stroke} cues`}>{sel.cues.map((c, i) => <Line key={i}>· {c}</Line>)}</Collapse>}
-                  <Collapse title="🧘 Mobility 10 (3+ days a week)">
-                    {MOBILITY_ROUTINE.map((m, i) => <Row key={i} name={m.name} right={m.detail} />)}
-                    <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", marginTop: 8 }}>After a ride or swim, or in the evening. Tick it in the daily check-in.</div>
-                  </Collapse>
+          <>
+            <header className="hdr">
+              <div style={{ minWidth: 0 }}>
+                <div className="sub l2">{phase ? phase.name : "Maintenance"} · Week {viewWeek} of {TOTAL_WEEKS}</div>
+                <h1 className="large">{viewWeek === todayWeek && !preStart ? "Today" : viewWeek === todayWeek + 1 || (preStart && viewWeek === 1) ? "Next week" : `Week ${viewWeek}`}</h1>
+                <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <WeekPill t={wType} />
+                  <span className="foot l2 num">{weekDone} of {weekReq.length} done</span>
+                  <SyncDot status={syncStatus} />
                 </div>
               </div>
+              <button className="iconbtn" aria-label="Settings" onClick={() => setModal({ kind: "settings" })}><Settings size={22} /></button>
+            </header>
+
+            {preStart && viewWeek === 1 && (
+              <Banner kind="info">The plan starts Monday 2 November. Keep doing Workouts A & B until then.</Banner>
             )}
-          </div>
+            {warns.length > 0 && <Alerts warns={warns} />}
+
+            {viewWeek === todayWeek && !preStart && (
+              <div className="card" style={{ marginTop: 12 }}>
+                <button className="row ind" onClick={() => setModal({ kind: "checkin" })}>
+                  <div className="iconchip" style={{ background: "var(--fill)", color: "var(--warn)" }}><Sun size={18} /></div>
+                  <div className="grow">
+                    <div className="body">Daily check-in</div>
+                    <div className="sub l2">{checkin ? checkinSummary(checkin) : "Readiness, sleep and weight · 10 seconds"}</div>
+                  </div>
+                  {checkin ? <Check size={20} color="var(--good)" /> : <ChevronRight size={20} className="chev" />}
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
+              <button className="iconbtn" style={{ background: "transparent" }} aria-label="Previous week" disabled={viewWeek <= 1} onClick={() => { setViewWeek(viewWeek - 1); setSelId(null); }}><ChevronLeft size={24} color={viewWeek <= 1 ? "var(--fill2)" : undefined} /></button>
+              <div style={{ textAlign: "center" }}>
+                <div className="hl num">Week {viewWeek} · {shortDate(weekStartDate(viewWeek))} – {shortDate(addDays(weekStartDate(viewWeek), 6))}</div>
+                {viewWeek !== todayWeek && <button className="sub" style={{ color: "var(--tint)", minHeight: 32 }} onClick={() => { setViewWeek(todayWeek); setSelId(null); }}>Back to this week</button>}
+              </div>
+              <button className="iconbtn" style={{ background: "transparent" }} aria-label="Next week" disabled={viewWeek >= TOTAL_WEEKS + 8} onClick={() => { setViewWeek(viewWeek + 1); setSelId(null); }}><ChevronRight size={24} /></button>
+            </div>
+            <div className="strip" style={{ marginTop: 6 }} role="tablist" aria-label="Sessions this week">
+              {week.map(s => {
+                const l = v2.logs[s.id]; const k = KIND[s.type]; const isSel = sel && s.id === sel.id;
+                const done = l?.status === "done", skipped = l?.status === "skipped";
+                return (
+                  <button key={s.id} role="tab" aria-selected={isSel} aria-label={`${DAY_NAMES[s.slot]} ${s.title}${done ? ", done" : skipped ? ", skipped" : ""}`} className={`day${isSel ? " sel" : ""}`} onClick={() => setSelId(s.id)}>
+                    <span className="cap l2" style={{ fontWeight: 600 }}>{s.slot}</span>
+                    <span className="dot" style={{ background: done ? k.c : "var(--fill)", color: done ? "var(--card)" : skipped ? "var(--label3)" : k.c, outline: s.optional && !done ? "1.5px dashed var(--fill2)" : "none" }}>
+                      {done ? <Check size={18} strokeWidth={3} /> : skipped ? <X size={16} /> : <k.Icon size={18} />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {sel && (
+              <>
+                <SessionCard s={sel} log={v2.logs[sel.id]}
+                  onLog={() => setModal({ kind: "log", s: sel })} onQuick={() => quickDone(sel)} onSkip={() => skip(sel)} onUndo={() => undo(sel)}
+                  onTest={() => setModal({ kind: "test", testKind: sel.test, s: sel })} />
+                {(sel.type === "bike" || sel.test === "ftp") && <Disclosure title="Bike zones" sub={ftp ? `FTP ${ftp} W` : "Set after the ramp test"}><BikeZones ftp={ftp} /></Disclosure>}
+                {(sel.type === "swim" || sel.test === "css") && <Disclosure title="Swim zones" sub={`CSS ${secToMMSS(css)}/100 m${cssIsStale(v2) ? " · old test" : ""}`}><SwimZonesList css={css} stale={cssIsStale(v2)} /></Disclosure>}
+                {sel.cues && <Disclosure title="Stroke cues">{sel.cues.map((c, i) => <div key={i} className="row"><span className="body">{c}</span></div>)}</Disclosure>}
+                {sel.type === "run" && <Banner kind="info">Run easy enough to talk in full sentences. Walk breaks are part of the plan.</Banner>}
+              </>
+            )}
+            <Disclosure title="Mobility routine" sub="10 minutes · 3 or more days a week">
+              {MOBILITY_ROUTINE.map((m, i) => <div key={i} className="row"><div className="grow"><div className="body">{m.name}</div><div className="sub l2">{m.detail}</div></div></div>)}
+            </Disclosure>
+          </>
         )}
 
-        {tab === "plan" && <PlanTab todayWeek={todayWeek} ctx={ctx} logs={v2.logs} onOpenWeek={w => { setViewWeek(w); setSelId(null); setTab("today"); }} />}
-
-        {tab === "kpi" && <KpiTab v2={v2} ctx={ctx} todayWeek={todayWeek} ftp={ftp} css={css} onRecord={k => setModal({ kind: "test", testKind: k })} />}
+        {tab === "plan" && <PlanTab todayWeek={todayWeek} ctx={ctx} logs={v2.logs} onOpenWeek={w => { setViewWeek(w); setSelId(null); setTab("today"); window.scrollTo(0, 0); }} />}
+        {tab === "kpi" && <KpiTab v2={v2} ctx={ctx} todayWeek={todayWeek} onRecord={() => setModal({ kind: "pickTest" })} />}
       </div>
 
-      <div className="bottom-nav" style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "#111111ee", backdropFilter: "blur(20px)", borderTop: "1px solid #ffffff0a", display: "flex", padding: "10px 0 24px", zIndex: 50 }}>
-        {[
-          { id: "today", label: "TODAY", d: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-          { id: "plan", label: "PLAN", d: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-          { id: "kpi", label: "KPIs", d: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
-        ].map(({ id, label, d }) => (
-          <button key={id} onClick={() => setTab(id)} style={{ flex: 1, background: "none", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, color: tab === id ? "#fff" : "#555" }}>
-            <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
-            <span style={{ fontSize: 10, letterSpacing: 2, fontWeight: 700 }}>{label}</span>
-          </button>
-        ))}
-      </div>
+      <nav className="tabbar" aria-label="Main">
+        <div className="tabbar-in">
+          {[["today", "Today", House], ["plan", "Plan", CalendarDays], ["kpi", "Progress", ChartColumn]].map(([id, label, Icon]) => (
+            <button key={id} className={`tab${tab === id ? " on" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => { setTab(id); window.scrollTo(0, 0); }}>
+              <Icon size={24} strokeWidth={tab === id ? 2.2 : 1.8} />{label}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      {modal?.kind === "log" && <LogModal s={modal.s} v2={v2} existing={v2.logs[modal.s.id]} hr={v2.settings.hr} onClose={() => setModal(null)} onSave={d => saveLog(modal.s, d)} />}
-      {modal?.kind === "test" && <TestModal kind={modal.testKind} onClose={() => setModal(null)} onSave={(date, results) => {
+      {modal?.kind === "log" && <LogSheet s={modal.s} v2={v2} existing={v2.logs[modal.s.id]} hr={v2.settings.hr} onClose={() => setModal(null)} onSave={d => saveLog(modal.s, d)} />}
+      {modal?.kind === "pickTest" && <PickTestSheet onClose={() => setModal(null)} onPick={k => setModal({ kind: "test", testKind: k })} />}
+      {modal?.kind === "test" && <TestSheet kind={modal.testKind} onClose={() => setModal(null)} onSave={(date, results) => {
         saveTests(modal.testKind || "body", date, results);
         if (modal.s) saveLog(modal.s, { status: "done", min: modal.s.minutes, rpe: modal.s.rpe, date }); else setModal(null);
       }} />}
-      {modal?.kind === "checkin" && <CheckinModal entry={v2.daily[today] || {}} hr={v2.settings.hr} onClose={() => setModal(null)} onSave={e => { saveDaily(today, e); setModal(null); }} />}
-      {modal?.kind === "settings" && <SettingsModal settings={v2.settings} ftp={ftp} css={css} onClose={() => setModal(null)} onSave={st => { updateV2(v => { v.settings = { ...v.settings, ...st }; }); setModal(null); }} />}
-    </div>
+      {modal?.kind === "checkin" && <CheckinSheet entry={v2.daily[today] || {}} hr={v2.settings.hr} onClose={() => setModal(null)} onSave={e => { saveDaily(today, e); setModal(null); }} />}
+      {modal?.kind === "settings" && <SettingsSheet settings={v2.settings} ftp={ftp} css={css} syncStatus={syncStatus} onClose={() => setModal(null)} onSave={st => { updateV2(v => { v.settings = { ...v.settings, ...st }; }); setModal(null); }} />}
+    </>
   );
 }
 
-// ── Today components ────────────────────────────────────────
-function SessionCard({ s, log }) {
-  const m = TYPE_META[s.type];
+function checkinSummary(c) {
+  const bits = [];
+  if (c.ready) bits.push(`Readiness ${c.ready}/5`);
+  if (c.sleep) bits.push(`${c.sleep} h sleep`);
+  if (c.weight) bits.push(`${c.weight} kg`);
+  if (c.mobility) bits.push("mobility done");
+  return bits.join(" · ") || "Saved";
+}
+
+// ── Small building blocks ───────────────────────────────────
+function WeekPill({ t }) {
+  const m = WEEK_TYPE_META[t];
+  const tone = { build: "var(--tint)", test: "var(--test)", race: "var(--race)", rehearsal: "var(--race)", holiday: "var(--run)" }[t] || "var(--label2)";
+  return <span className="pill" style={{ background: "var(--fill)", color: tone }}>{m.label}</span>;
+}
+function SyncDot({ status }) {
+  const c = status === "synced" ? "var(--good)" : status === "saving" ? "var(--warn)" : "var(--bad)";
+  const txt = status === "synced" ? "Synced" : status === "saving" ? "Saving…" : "Offline";
+  return <span className="foot l2" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 4, background: c }} />{txt}</span>;
+}
+function Banner({ kind = "info", children }) {
+  const c = kind === "red" ? "var(--bad)" : kind === "amber" ? "var(--warn)" : "var(--tint)";
+  const Icon = kind === "info" ? Info : TriangleAlert;
   return (
-    <div style={{ marginTop: 14, borderRadius: 16, overflow: "hidden", background: "#111", border: `1px solid ${m.color}22` }}>
-      <div style={{ background: `linear-gradient(135deg,${m.color}22 0%,transparent 60%)`, padding: "18px 18px 12px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-          <div>
-            <div style={{ fontSize: 11, letterSpacing: 3, color: m.color, fontFamily: FONT, textTransform: "uppercase" }}>{m.emoji} {m.label} · {s.slot}{s.optional ? " · optional" : ""}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1.1, marginTop: 4 }}>{s.title}</div>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: "#888", marginTop: 4 }}>~{s.minutes} min · planned effort {s.rpe}/10{s.hardMin ? ` · ${s.hardMin} min hard` : ""}</div>
-          </div>
-          {log?.status === "done" && <div style={{ background: m.color, borderRadius: 20, padding: "5px 10px", fontSize: 12, fontWeight: 700, color: "#000", flexShrink: 0 }}>DONE ✓</div>}
-          {log?.status === "skipped" && <div style={{ background: "#2a2a2a", borderRadius: 20, padding: "5px 10px", fontSize: 12, fontWeight: 700, color: "#aaa", flexShrink: 0 }}>SKIPPED</div>}
-        </div>
-        {s.zwift && <div style={{ fontFamily: FONT, fontSize: 12, color: "#9fd", marginTop: 8, background: "#00D4FF10", borderRadius: 8, padding: "6px 10px" }}>Zwift: {s.zwift}</div>}
-        {s.note && <div style={{ fontFamily: FONT, fontSize: 12, color: "#ccc", marginTop: 6 }}>{s.note}</div>}
-      </div>
-      <div style={{ padding: "0 18px 16px" }}>
-        {s.blocks.map((b, i) => {
-          if (b.divider) return (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0 4px" }}>
-              <div style={{ height: 1, flex: 1, background: "#ffffff10" }} />
-              <span style={{ fontSize: 11, letterSpacing: 2, color: m.color, fontFamily: FONT, textTransform: "uppercase" }}>{b.name}</span>
-              <div style={{ height: 1, flex: 1, background: "#ffffff10" }} />
-            </div>
-          );
-          if (b.ex) return <LiftRow key={i} b={b} color={m.color} last={log?.lifts?.[b.ex]} />;
-          return (
-            <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid #ffffff08" }}>
-              <div style={{ fontFamily: FONT, fontSize: 14, color: "#e8e8e8", fontWeight: 600 }}>{b.name}</div>
-              {b.detail && <div style={{ fontFamily: FONT, fontSize: 13, color: "#aaa", marginTop: 2, lineHeight: 1.4 }}>{b.detail}</div>}
-            </div>
-          );
-        })}
-        {s.notes?.length > 0 && <div style={{ marginTop: 10 }}>{s.notes.map((n, i) => <div key={i} style={{ fontFamily: FONT, fontSize: 12, color: "#bbb", lineHeight: 1.4, marginTop: 4 }}>💡 {n}</div>)}</div>}
-        {log?.status === "done" && !log.quick && (
-          <div style={{ marginTop: 12, background: "#181818", borderRadius: 10, padding: 12, fontFamily: FONT, fontSize: 13, color: "#ccc" }}>
-            Logged: {log.min || "–"} min · effort {log.rpe || "–"}/10{log.power ? ` · ${log.power} W` : ""}{log.hr ? ` · ${log.hr} bpm` : ""}{log.dist ? ` · ${log.dist} m` : ""}
-            {log.pain?.length > 0 && <div style={{ color: "#FF8FA3", marginTop: 4 }}>Pain: {log.pain.join(", ")}</div>}
-            {log.notes && <div style={{ fontStyle: "italic", color: "#999", marginTop: 4 }}>"{log.notes}"</div>}
-          </div>
-        )}
+    <div className="card" style={{ marginTop: 12 }}>
+      <div className="row" style={{ alignItems: "flex-start" }}>
+        <Icon size={20} color={c} style={{ flexShrink: 0, marginTop: 1 }} />
+        <div className="callout grow">{children}</div>
       </div>
     </div>
   );
 }
-function LiftRow({ b, color, last }) {
+function Alerts({ warns }) {
   const [open, setOpen] = useState(false);
+  const order = { red: 0, amber: 1, info: 2 };
+  const sorted = [...warns].sort((a, b) => order[a.level] - order[b.level]);
+  const shown = open ? sorted : sorted.slice(0, 1);
   return (
-    <div style={{ borderBottom: "1px solid #ffffff08" }}>
-      <button onClick={() => setOpen(!open)} style={{ width: "100%", background: "none", border: "none", padding: "9px 0", display: "flex", justifyContent: "space-between", alignItems: "center", textAlign: "left", color: "#e8e8e8" }}>
-        <span style={{ fontFamily: FONT, fontSize: 14 }}>{b.name} <span style={{ color: "#777", fontSize: 12 }}>{b.load}</span></span>
-        <span style={{ fontFamily: FONT, fontSize: 13, flexShrink: 0, marginLeft: 8 }}><b style={{ color }}>{b.sets} ×</b> <span style={{ color: "#aaa" }}>{b.reps} · {b.rest}</span></span>
-      </button>
-      {open && (
-        <div style={{ fontFamily: FONT, fontSize: 12, color: "#aaa", paddingBottom: 9, lineHeight: 1.45 }}>
-          <div>Cue: {b.cue}</div>
-          <div>Next step: {b.next}</div>
-          {last && <div style={{ color }}>Last logged top set: {last.w ? `${last.w} kg × ` : ""}{last.r} reps</div>}
-        </div>
+    <div className="card" style={{ marginTop: 12 }}>
+      {shown.map((w, i) => {
+        const c = w.level === "red" ? "var(--bad)" : w.level === "amber" ? "var(--warn)" : "var(--tint)";
+        const Icon = w.level === "info" ? Info : TriangleAlert;
+        return (
+          <div key={i} className="row" style={{ alignItems: "flex-start" }}>
+            <Icon size={20} color={c} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div className="callout grow">{w.text}</div>
+          </div>
+        );
+      })}
+      {sorted.length > 1 && (
+        <button className="row" onClick={() => setOpen(!open)}>
+          <span className="sub" style={{ color: "var(--tint)" }}>{open ? "Show less" : `${sorted.length - 1} more alert${sorted.length > 2 ? "s" : ""}`}</span>
+        </button>
       )}
     </div>
   );
 }
-function SessionActions({ s, log, onLog, onQuick, onSkip, onUndo, onTest }) {
-  const m = TYPE_META[s.type];
-  if (log) return (
-    <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-      <button onClick={onLog} style={btn("#1e1e1e", "#ccc")}>EDIT LOG</button>
-      <button onClick={onUndo} style={btn("#1e1e1e", "#888")}>UNDO</button>
-    </div>
-  );
-  if (s.type === "test") return (
-    <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-      <button onClick={onTest} style={{ ...btn(m.color, "#000"), flex: 1, fontSize: 17 }}>RECORD RESULTS</button>
-      <button onClick={onSkip} style={btn("#1e1e1e", "#888")}>SKIP</button>
-    </div>
-  );
+function Disclosure({ title, sub, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-      <button onClick={onLog} style={{ ...btn(m.color, "#000"), flex: 1, fontSize: 17 }}>LOG SESSION</button>
-      <button onClick={onQuick} style={btn("#1e1e1e", "#ccc")}>QUICK ✓</button>
-      <button onClick={onSkip} style={btn("#1e1e1e", "#888")}>SKIP</button>
+    <div className="card" style={{ marginTop: 12 }}>
+      <button className="row" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <div className="grow"><div className="body">{title}</div>{sub && <div className="sub l2">{sub}</div>}</div>
+        <ChevronDown size={20} className="chev" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+      </button>
+      {open && <div className="rowsep" style={{ position: "relative" }}>{children}</div>}
     </div>
+  );
+}
+
+// ── Session card ────────────────────────────────────────────
+function SessionCard({ s, log, onLog, onQuick, onSkip, onUndo, onTest }) {
+  const k = KIND[s.type];
+  const done = log?.status === "done", skipped = log?.status === "skipped";
+  return (
+    <section className="card" style={{ marginTop: 12 }} aria-label="Session">
+      <div style={{ padding: "16px 16px 4px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="iconchip" style={{ background: "var(--fill)", color: k.c }}><k.Icon size={18} /></div>
+          <span className="sub" style={{ color: k.c, fontWeight: 600 }}>{k.label} · {DAY_NAMES[s.slot]}{s.optional ? " · optional" : ""}</span>
+          {done && <span className="pill" style={{ marginLeft: "auto", background: "var(--fill)", color: "var(--good)" }}><Check size={14} strokeWidth={3} />Done</span>}
+          {skipped && <span className="pill" style={{ marginLeft: "auto", background: "var(--fill)", color: "var(--label2)" }}>Skipped</span>}
+        </div>
+        <h2 className="t2" style={{ marginTop: 10 }}>{s.title}</h2>
+        <div className="sub l2 num" style={{ marginTop: 4 }}>{s.minutes} min · effort {s.rpe}/10{s.hardMin ? ` · ${s.hardMin} min hard` : ""}</div>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+          {log ? (
+            <>
+              <button className="btn btn-fill" style={{ flex: 1 }} onClick={onLog}>Edit log</button>
+              <button className="btn btn-fill" onClick={onUndo}>Undo</button>
+            </>
+          ) : s.type === "test" ? (
+            <>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={onTest}>Record results</button>
+              <button className="btn btn-fill" onClick={onSkip}>Skip</button>
+            </>
+          ) : (
+            <>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={onLog}>Log session</button>
+              <button className="btn btn-fill" aria-label="Mark done as planned" onClick={onQuick}><Check size={18} strokeWidth={2.5} />Done</button>
+              <button className="btn btn-fill" onClick={onSkip}>Skip</button>
+            </>
+          )}
+        </div>
+        {done && !log.quick && (
+          <div className="sub l2 num" style={{ marginTop: 10 }}>
+            Logged {log.min || "–"} min · effort {log.rpe || "–"}/10{log.power ? ` · ${log.power} W` : ""}{log.hr ? ` · ${log.hr} bpm` : ""}{log.dist ? ` · ${log.dist} m` : ""}
+            {log.pain?.length > 0 && <span style={{ color: "var(--bad)" }}> · Pain: {log.pain.join(", ")}</span>}
+          </div>
+        )}
+      </div>
+
+      {s.zwift && (
+        <div className="row" style={{ alignItems: "flex-start", marginTop: 8 }}>
+          <Bike size={18} color="var(--bike)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div className="sub l2 grow">{s.zwift}</div>
+        </div>
+      )}
+      {s.note && <div className="row"><div className="sub l2">{s.note}</div></div>}
+
+      <div style={{ marginTop: 4 }}>
+        {s.blocks.map((b, i) => {
+          if (b.divider) return <div key={i} className="foot" style={{ padding: "16px 16px 6px", color: k.c, fontWeight: 600 }}>{b.name}</div>;
+          if (b.ex) return <LiftRow key={i} b={b} last={log?.lifts?.[b.ex]} />;
+          return (
+            <div key={i} className="row" style={{ alignItems: "flex-start" }}>
+              <div className="grow"><div className="body">{b.name}</div>{b.detail && <div className="sub l2" style={{ marginTop: 2 }}>{b.detail}</div>}</div>
+            </div>
+          );
+        })}
+      </div>
+      {s.notes?.length > 0 && (
+        <div style={{ padding: "6px 0 8px" }}>
+          {s.notes.map((n, i) => {
+            const Icon = /film/i.test(n) ? Video : Lightbulb;
+            return (
+              <div key={i} className="row" style={{ alignItems: "flex-start", minHeight: 0, paddingTop: 8, paddingBottom: 8 }}>
+                <Icon size={18} color="var(--label3)" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div className="sub l2 grow">{n}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+function LiftRow({ b, last }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button className="row" style={{ alignItems: "flex-start" }} aria-expanded={open} onClick={() => setOpen(!open)}>
+      <div className="grow">
+        <div className="body">{b.name}</div>
+        <div className="sub l2" style={{ marginTop: 2 }}>{b.load !== "BW" ? `${b.load} · ` : ""}{b.rest} rest</div>
+        {open && (
+          <div className="sub l2" style={{ marginTop: 8, display: "grid", gap: 4 }}>
+            <div><span style={{ color: "var(--label)" }}>Cue:</span> {b.cue}</div>
+            <div><span style={{ color: "var(--label)" }}>Next step:</span> {b.next}</div>
+            {last && <div><span style={{ color: "var(--label)" }}>Last time:</span> {last.w ? `${last.w} kg × ` : ""}{last.r}</div>}
+          </div>
+        )}
+      </div>
+      <div className="hl num" style={{ flexShrink: 0, textAlign: "right" }}>{b.sets} × {b.reps}</div>
+    </button>
   );
 }
 function BikeZones({ ftp }) {
-  return (
-    <div style={{ marginTop: 12, background: "#00111a", borderRadius: 12, padding: "12px 14px", border: "1px solid #00D4FF22" }}>
-      <SLabel color="#00D4FF">Bike zones · {ftp ? `FTP ${ftp} W` : "set FTP after the ramp test"}</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-        {BIKE_ZONES.map(z => (
-          <div key={z.key} style={{ background: "#0a0a0a", borderRadius: 8, padding: "6px 9px" }}>
-            <div style={{ fontSize: 10, color: "#777", fontFamily: FONT, letterSpacing: 1, textTransform: "uppercase" }}>{z.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#00D4FF" }}>{ftp ? `${Math.round(z.lo * ftp / 100)}–${Math.round(z.hi * ftp / 100)} W` : `${z.lo}–${z.hi}%`}</div>
-          </div>
-        ))}
-      </div>
+  return BIKE_ZONES.map(z => (
+    <div key={z.key} className="row">
+      <div className="grow body">{z.label}</div>
+      <div className="body num l2">{ftp ? `${Math.round(z.lo * ftp / 100)}–${Math.round(z.hi * ftp / 100)} W` : `${z.lo}–${z.hi}%`}</div>
     </div>
-  );
+  ));
 }
-function SwimZonesCard({ css, stale }) {
+function SwimZonesList({ css, stale }) {
   return (
-    <div style={{ marginTop: 12, background: "#001a0e", borderRadius: 12, padding: "12px 14px", border: "1px solid #00FF9D18" }}>
-      <SLabel color="#00FF9D">Swim zones · CSS {secToMMSS(css)}/100m{stale ? " (old test)" : ""}</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-        {swimZones(css).map(z => (
-          <div key={z.key} style={{ background: "#0a0a0a", borderRadius: 8, padding: "6px 9px" }}>
-            <div style={{ fontSize: 10, color: "#777", fontFamily: FONT, letterSpacing: 1, textTransform: "uppercase" }}>{z.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: z.color }}>{z.pace}</div>
-          </div>
-        ))}
-      </div>
-      {stale && <div style={{ fontFamily: FONT, fontSize: 11, color: "#888", marginTop: 8 }}>Based on your pre-break 1000 m TT. Expect to swim slower than these until the week 3 CSS test resets them.</div>}
-    </div>
+    <>
+      {swimZones(css).map(z => (
+        <div key={z.key} className="row">
+          <div className="grow body">{z.label}</div>
+          <div className="body num l2">{z.pace}<span className="foot"> /100 m</span></div>
+        </div>
+      ))}
+      {stale && <div className="row"><div className="sub l2">From your pre-break 1000 m test. Expect to be slower until the CSS test resets these.</div></div>}
+    </>
   );
 }
 
 // ── Plan tab ────────────────────────────────────────────────
 function PlanTab({ todayWeek, ctx, logs, onOpenWeek }) {
   const [open, setOpen] = useState(() => phaseOf(todayWeek)?.id || "restart");
+  const pct = Math.min(100, Math.max(0, ((todayWeek - 0.5) / TOTAL_WEEKS) * 100));
   return (
-    <div className="fu" style={{ marginTop: 14 }}>
-      <div style={{ fontFamily: FONT, fontSize: 13, color: "#999", lineHeight: 1.5 }}>Calendar weeks, Monday to Sunday. Do the week's sessions in any order. Missed sessions are skipped, not shifted. Tap a week to open it.</div>
-      {/* Timeline bar */}
-      <div style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", margin: "14px 0 4px" }}>
-        {PHASES.map(p => <div key={p.id} title={p.name} style={{ flex: p.to - p.from + 1, background: p.color, opacity: todayWeek > p.to ? 0.35 : 1 }} />)}
-      </div>
-      <div style={{ position: "relative", height: 14 }}>
-        <div style={{ position: "absolute", left: `${Math.min(100, ((todayWeek - 0.5) / TOTAL_WEEKS) * 100)}%`, transform: "translateX(-50%)", fontSize: 10, color: "#fff" }}>▲</div>
+    <>
+      <header className="hdr"><div><div className="sub l2">Nov 2026 – Nov 2027</div><h1 className="large">Plan</h1></div></header>
+      <p className="callout l2" style={{ margin: "0 4px" }}>Weeks run Monday to Sunday. Do the sessions in any order; missed sessions are skipped, not moved. Tap a week to open it.</p>
+
+      <div className="card" style={{ marginTop: 16, padding: 16 }}>
+        <div className="bar-track" aria-hidden="true">
+          {PHASES.map(p => <div key={p.id} style={{ flex: p.to - p.from + 1, background: p.color, opacity: todayWeek > p.to ? 0.35 : 0.9 }} />)}
+        </div>
+        <div style={{ position: "relative", height: 18 }}>
+          <div className="cap" style={{ position: "absolute", left: `${pct}%`, transform: "translateX(-50%)", top: 4, fontWeight: 600 }}>▲ now</div>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 8 }}>
+          {PHASES.map(p => <span key={p.id} className="foot l2" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: p.color }} />{p.name}</span>)}
+        </div>
       </div>
 
       {PHASES.map(p => {
         const isOpen = open === p.id; const current = todayWeek >= p.from && todayWeek <= p.to;
         return (
-          <div key={p.id} style={{ marginTop: 10, background: "#131313", borderRadius: 14, border: current ? `1px solid ${p.color}66` : "1px solid #1e1e1e", overflow: "hidden" }}>
-            <button onClick={() => setOpen(isOpen ? null : p.id)} style={{ width: "100%", background: "none", border: "none", padding: "14px 16px", textAlign: "left", color: "#fff" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 20, fontWeight: 900, color: p.color }}>{p.name.toUpperCase()}</span>
-                <span style={{ fontFamily: FONT, fontSize: 12, color: "#888" }}>W{p.from}–{p.to} · {shortDate(weekStartDate(p.from))}–{shortDate(addDays(weekStartDate(p.to), 6))}</span>
+          <section key={p.id} className="card" style={{ marginTop: 12, boxShadow: current ? "inset 0 0 0 2px var(--tint)" : "none" }}>
+            <button className="row" aria-expanded={isOpen} style={{ alignItems: "flex-start", padding: "14px 16px" }} onClick={() => setOpen(isOpen ? null : p.id)}>
+              <span style={{ width: 10, height: 10, borderRadius: 5, background: p.color, marginTop: 7, flexShrink: 0 }} />
+              <div className="grow">
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                  <span className="t3">{p.name}</span>{current && <span className="pill" style={{ background: "var(--fill)", color: "var(--tint)" }}>Now</span>}
+                </div>
+                <div className="sub l2 num">Weeks {p.from}–{p.to} · {shortDate(weekStartDate(p.from))} – {shortDate(addDays(weekStartDate(p.to), 6))}</div>
+                <div className="callout" style={{ marginTop: 6 }}>{p.goal}</div>
+                <div className="sub l2" style={{ marginTop: 4 }}>{p.template}</div>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 13, color: "#ccc", marginTop: 4, lineHeight: 1.4 }}>{p.goal}</div>
-              <div style={{ fontFamily: FONT, fontSize: 12, color: "#888", marginTop: 4 }}>{p.template}</div>
+              <ChevronDown size={20} className="chev" style={{ marginTop: 4, transform: isOpen ? "rotate(180deg)" : "none" }} />
             </button>
             {isOpen && (
-              <div style={{ padding: "0 16px 14px" }}>
-                <div style={{ fontFamily: FONT, fontSize: 12, color: "#aaa", lineHeight: 1.5, background: "#0d0d0d", borderRadius: 10, padding: 10, marginBottom: 8 }}>Why: {p.why}</div>
+              <>
+                <div className="row" style={{ alignItems: "flex-start" }}>
+                  <Lightbulb size={18} color="var(--label3)" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div className="sub l2 grow">{p.why}</div>
+                </div>
                 {Array.from({ length: p.to - p.from + 1 }, (_, i) => p.from + i).map(w => {
-                  const wk = buildWeek(w, ctx); const t = weekType(w); const tm = WEEK_TYPE_META[t];
-                  const done = wk.filter(s => logs[s.id]?.status === "done").length;
+                  const wk = buildWeek(w, ctx); const done = wk.filter(s => logs[s.id]?.status === "done").length;
                   const ms = MILESTONES.filter(m => m.week === w);
                   return (
-                    <button key={w} onClick={() => onOpenWeek(w)} style={{ width: "100%", textAlign: "left", background: w === todayWeek ? "#1c1c1c" : "transparent", border: "none", borderTop: "1px solid #1e1e1e", padding: "9px 4px", color: "#ddd", opacity: w < todayWeek ? 0.55 : 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>W{w} <span style={{ fontFamily: FONT, fontSize: 11, color: "#777", fontWeight: 400 }}>{shortDate(weekStartDate(w))}</span></span>
-                        <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          {done > 0 && <span style={{ fontFamily: FONT, fontSize: 11, color: "#888" }}>{done}/{wk.length}</span>}
-                          <Badge color={tm.color}>{tm.label}</Badge>
-                        </span>
+                    <button key={w} className="row" style={{ alignItems: "flex-start", opacity: w < todayWeek ? 0.6 : 1, background: w === todayWeek ? "var(--fill)" : "transparent" }} onClick={() => onOpenWeek(w)}>
+                      <div className="grow">
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span className="hl num">Week {w}</span><span className="sub l2 num">{shortDate(weekStartDate(w))}</span><WeekPill t={weekType(w)} />
+                          {done > 0 && <span className="foot l2 num">{done}/{wk.length} done</span>}
+                        </div>
+                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                          {wk.map(s => { const k = KIND[s.type]; return <span key={s.id} title={s.title} style={{ color: k.c, opacity: s.optional ? 0.5 : 1, display: "inline-flex" }}><k.Icon size={16} /></span>; })}
+                        </div>
+                        {ms.map((m, i) => <div key={i} className="sub" style={{ color: "var(--test)", marginTop: 6 }}>★ {m.text}</div>)}
                       </div>
-                      <div style={{ fontFamily: FONT, fontSize: 12, color: "#999", marginTop: 3, lineHeight: 1.4 }}>
-                        {wk.map(s => `${TYPE_META[s.type].emoji} ${s.title}${s.optional ? " (opt)" : ""}`).join(" · ")}
-                      </div>
-                      {ms.map((m, i) => <div key={i} style={{ fontFamily: FONT, fontSize: 12, color: "#FBBF24", marginTop: 3 }}>★ {m.text}</div>)}
+                      <ChevronRight size={18} className="chev" style={{ marginTop: 2 }} />
                     </button>
                   );
                 })}
-              </div>
+              </>
             )}
-          </div>
+          </section>
         );
       })}
 
-      <div style={{ marginTop: 22 }}><SLabel>The research behind it</SLabel></div>
-      {RESEARCH_NOTES.map((n, i) => (
-        <div key={i} style={{ background: "#131313", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>{n.title}</div>
-          <div style={{ fontFamily: FONT, fontSize: 13, color: "#aaa", lineHeight: 1.5, marginTop: 3 }}>{n.text}</div>
-        </div>
-      ))}
-      <div style={{ fontFamily: FONT, fontSize: 11, color: "#666", marginTop: 6 }}>Check references yourself; AI can get citation details wrong.</div>
-    </div>
+      <div className="sect"><h2 className="t3">Why this plan</h2></div>
+      <div className="card">
+        {RESEARCH_NOTES.map((n, i) => <ResearchRow key={i} n={n} />)}
+      </div>
+      <p className="foot l3" style={{ margin: "8px 4px 0" }}>Check references yourself; AI can get citation details wrong.</p>
+    </>
+  );
+}
+function ResearchRow({ n }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button className="row" aria-expanded={open} style={{ alignItems: "flex-start" }} onClick={() => setOpen(!open)}>
+      <div className="grow"><div className="body">{n.title}</div>{open && <div className="sub l2" style={{ marginTop: 4 }}>{n.text}</div>}</div>
+      <ChevronDown size={18} className="chev" style={{ marginTop: 2, transform: open ? "rotate(180deg)" : "none" }} />
+    </button>
   );
 }
 
-// ── KPI tab ─────────────────────────────────────────────────
-function KpiTab({ v2, ctx, todayWeek, ftp, css, onRecord }) {
+// ── Progress tab ────────────────────────────────────────────
+function KpiTab({ v2, ctx, todayWeek, onRecord }) {
   const w = Math.max(1, todayWeek);
   const cur = weekSummary(v2, w, ctx);
   const ramp = rampPct(v2, w, ctx);
   const hist = Array.from({ length: 8 }, (_, i) => w - 7 + i).filter(x => x >= 1).map(x => weekSummary(v2, x, ctx));
-  const pctTxt = x => (x == null ? "–" : `${Math.round(x * 100)}%`);
-  const good = (ok, warn) => (ok ? "#00FF9D" : warn ? "#FBBF24" : "#FF4D6D");
-  // Judge the current week against what is due so far, not the whole week
   const isCur = w === weekOfDate(todayStr());
   const elapsed = isCur ? ((new Date().getDay() + 6) % 7) + 1 : 7;
   const due = isCur ? buildWeek(w, ctx).filter(s => !s.optional && DAYS.indexOf(s.slot) < elapsed - 1).length : cur.planned;
   const compDue = due ? Math.min(1, cur.done / due) : 1;
   const perDay = n => n / elapsed;
+  const tone = (ok, warn) => (ok ? "var(--good)" : warn ? "var(--warn)" : "var(--bad)");
+
+  const tested = Object.entries(TEST_DEFS).map(([k, d]) => ({ k, d, data: series(v2, k) }));
+  const empty = tested.filter(t => !t.data.length);
+
   return (
-    <div className="fu" style={{ marginTop: 14 }}>
-      <SLabel>This week · W{w}</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <KCard label="Sessions done" value={`${cur.done}/${cur.planned}`} sub={isCur ? `${due} due before today · target ≥ 80%` : "Target ≥ 80%"} color={due === 0 ? "#888" : good(compDue >= 0.8, compDue >= 0.6)} />
-        <KCard label="Hours" value={`${(cur.doneMin / 60).toFixed(1)} / ${(cur.plannedMin / 60).toFixed(1)}`} sub="done / planned" color="#00D4FF" />
-        <KCard label="Load (effort × min)" value={cur.load} sub={ramp == null ? "vs 3-wk avg: –" : `${ramp >= 0 ? "+" : ""}${Math.round(ramp * 100)}% vs 3-wk avg`} color={ramp == null ? "#888" : good(ramp <= 0.2, ramp <= 0.3)} />
-        <KCard label="Easy share (endurance)" value={pctTxt(cur.easyShare)} sub="Target 75–80%" color={cur.easyShare == null ? "#888" : good(cur.easyShare >= 0.72, cur.easyShare >= 0.65)} />
-        <KCard label="Mobility days" value={`${cur.mobilityDays}/7`} sub="Target 3+ a week" color={good(perDay(cur.mobilityDays) >= 3 / 7, perDay(cur.mobilityDays) >= 1 / 7)} />
-        <KCard label="Protein target days" value={`${cur.proteinDays}/7`} sub="160 g · target 5+" color={good(perDay(cur.proteinDays) >= 5 / 7, perDay(cur.proteinDays) >= 3 / 7)} />
-        <KCard label="Sleep avg" value={cur.sleep ? `${cur.sleep.toFixed(1)} h` : "–"} sub="Target 7+" color={cur.sleep == null ? "#888" : good(cur.sleep >= 7, cur.sleep >= 6)} />
-        <KCard label="Readiness avg" value={cur.ready ? `${cur.ready.toFixed(1)}/5` : "–"} sub={cur.rhr ? `RHR ${Math.round(cur.rhr)} bpm` : "from check-ins"} color={cur.ready == null ? "#888" : good(cur.ready >= 3.5, cur.ready >= 2.5)} />
+    <>
+      <header className="hdr"><div><div className="sub l2 num">Week {w}</div><h1 className="large">Progress</h1></div>
+        <button className="iconbtn" aria-label="Record results" onClick={onRecord}><Plus size={22} /></button>
+      </header>
+
+      <div className="sect" style={{ marginTop: 8 }}><h2 className="t3">This week</h2></div>
+      <div className="kgrid kgrid4">
+        <Tile label="Sessions" value={`${cur.done}/${cur.planned}`} sub={isCur ? `${due} due so far · aim 80%+` : "Aim 80%+"} color={due === 0 ? "var(--label3)" : tone(compDue >= 0.8, compDue >= 0.6)} />
+        <Tile label="Hours" value={(cur.doneMin / 60).toFixed(1)} sub={`of ${(cur.plannedMin / 60).toFixed(1)} planned`} color="var(--tint)" />
+        <Tile label="Load" value={cur.load} sub={ramp == null ? "effort × minutes" : `${ramp >= 0 ? "+" : ""}${Math.round(ramp * 100)}% vs 3-week avg`} color={ramp == null ? "var(--label3)" : tone(ramp <= 0.2, ramp <= 0.3)} />
+        <Tile label="Easy share" value={cur.easyShare == null ? "–" : `${Math.round(cur.easyShare * 100)}%`} sub="Aim 75–80%" color={cur.easyShare == null ? "var(--label3)" : tone(cur.easyShare >= 0.72, cur.easyShare >= 0.65)} />
+      </div>
+      <div className="card" style={{ marginTop: 12 }}>
+        <StatRow label="Mobility days" value={`${cur.mobilityDays} of 7`} sub="Aim 3+" color={tone(perDay(cur.mobilityDays) >= 3 / 7, perDay(cur.mobilityDays) >= 1 / 7)} />
+        <StatRow label="Protein target days" value={`${cur.proteinDays} of 7`} sub="160 g · aim 5+" color={tone(perDay(cur.proteinDays) >= 5 / 7, perDay(cur.proteinDays) >= 3 / 7)} />
+        <StatRow label="Sleep" value={cur.sleep ? `${cur.sleep.toFixed(1)} h` : "–"} sub="Aim 7+ h" color={cur.sleep == null ? "var(--label3)" : tone(cur.sleep >= 7, cur.sleep >= 6)} />
+        <StatRow label="Readiness" value={cur.ready ? `${cur.ready.toFixed(1)}/5` : "–"} sub={cur.rhr ? `Resting HR ${Math.round(cur.rhr)} bpm` : "From check-ins"} color={cur.ready == null ? "var(--label3)" : tone(cur.ready >= 3.5, cur.ready >= 2.5)} />
       </div>
 
-      <div style={{ marginTop: 20 }}><SLabel>Last 8 weeks</SLabel></div>
-      <div style={{ background: "#131313", borderRadius: 12, padding: 14 }}>
-        <Bars label="Completion" data={hist.map(h => ({ w: h.week, v: h.completion }))} max={1} color="#00FF9D" fmt={v => `${Math.round(v * 100)}%`} target={0.8} />
-        <Bars label="Load" data={hist.map(h => ({ w: h.week, v: h.load }))} color="#FF6B35" fmt={v => v} />
-        <Bars label="Hours" data={hist.map(h => ({ w: h.week, v: h.doneMin / 60 }))} color="#00D4FF" fmt={v => v.toFixed(1)} />
+      <div className="sect"><h2 className="t3">Last 8 weeks</h2></div>
+      <div className="card" style={{ padding: "14px 16px" }}>
+        <Bars label="Sessions completed" data={hist.map(h => ({ w: h.week, v: h.completion }))} max={1} fmt={v => `${Math.round(v * 100)}%`} target={0.8} />
+        <Bars label="Training load" data={hist.map(h => ({ w: h.week, v: h.load }))} fmt={v => v} />
+        <Bars label="Hours" data={hist.map(h => ({ w: h.week, v: h.doneMin / 60 }))} fmt={v => v.toFixed(1)} last />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 22 }}>
-        <SLabel>Results</SLabel>
-        <select onChange={e => { if (e.target.value) { onRecord(e.target.value); e.target.value = ""; } }} defaultValue="" style={{ background: "#FBBF2422", color: "#FBBF24", border: "1px solid #FBBF2455", borderRadius: 8, padding: "6px 8px", fontSize: 13 }}>
-          <option value="" disabled>+ Record</option>
-          <option value="ftp">FTP</option><option value="css">CSS test</option><option value="strength">Strength rep tests</option>
-          <option value="gym">Gym e1RM tests</option><option value="mobility">Mobility tests</option><option value="body">Waist / blood / decoupling</option>
-        </select>
-      </div>
-      <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", marginBottom: 8 }}>Weight and resting HR come from the daily check-in.</div>
-      <div className="two-col">
-        {TEST_GROUPS.map(g => (
-          <div key={g} style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#ccc", letterSpacing: 1, margin: "6px 0" }}>{g.toUpperCase()}</div>
-            {Object.entries(TEST_DEFS).filter(([, d]) => d.group === g).map(([k, d]) => <KpiRow key={k} k={k} d={d} data={series(v2, k)} />)}
+      <div className="sect"><h2 className="t3">Results</h2><button className="btn-plain sub" onClick={onRecord}>Record</button></div>
+      {TEST_GROUPS.map(g => {
+        const rows = tested.filter(t => t.d.group === g && t.data.length);
+        if (!rows.length) return null;
+        return (
+          <div key={g} style={{ marginBottom: 12 }}>
+            <div className="foot l2" style={{ margin: "0 16px 6px", fontWeight: 600 }}>{g}</div>
+            <div className="card">{rows.map(t => <KpiRow key={t.k} d={t.d} data={t.data} />)}</div>
           </div>
-        ))}
-      </div>
+        );
+      })}
+      {empty.length > 0 && (
+        <div className="card">
+          <div className="row" style={{ alignItems: "flex-start" }}>
+            <Info size={18} color="var(--label3)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div className="sub l2 grow">Not tested yet: {empty.map(t => t.d.label).join(", ")}. They appear here after your first test week.</div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+function Tile({ label, value, sub, color }) {
+  return (
+    <div className="tile">
+      <div className="sub l2" style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: color }} />{label}</div>
+      <div className="big num" style={{ marginTop: 6 }}>{value}</div>
+      <div className="foot l2" style={{ marginTop: 2 }}>{sub}</div>
     </div>
   );
 }
-function KpiRow({ k, d, data }) {
+function StatRow({ label, value, sub, color }) {
+  return (
+    <div className="row">
+      <span style={{ width: 8, height: 8, borderRadius: 4, background: color, flexShrink: 0 }} />
+      <div className="grow"><div className="body">{label}</div><div className="sub l2">{sub}</div></div>
+      <div className="hl num">{value}</div>
+    </div>
+  );
+}
+function KpiRow({ d, data }) {
   const fmt = v => (d.fmt === "time" ? secToMMSS(v) : Number.isInteger(v) ? v : v.toFixed(1));
-  const lastV = data.length ? data[data.length - 1].value : null;
-  const first = data.length > 1 ? data[0].value : null;
-  const delta = first != null ? lastV - first : null;
+  const lastV = data[data.length - 1].value;
+  const delta = data.length > 1 ? lastV - data[0].value : null;
   const improved = delta != null && (d.better === "up" ? delta > 0 : delta < 0);
   return (
-    <div style={{ background: "#131313", borderRadius: 10, padding: "10px 12px", marginBottom: 6, display: "flex", alignItems: "center", gap: 10 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: FONT, fontSize: 13, color: "#ddd" }}>{d.label}</div>
-        <div style={{ fontFamily: FONT, fontSize: 11, color: "#777" }}>Target: {d.target}</div>
-      </div>
-      <Spark data={data.map(p => p.value)} color={improved ? "#00FF9D" : "#888"} />
-      <div style={{ textAlign: "right", minWidth: 64 }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: lastV == null ? "#444" : "#fff" }}>{lastV == null ? "–" : fmt(lastV)}<span style={{ fontFamily: FONT, fontSize: 11, color: "#777", fontWeight: 400 }}> {lastV == null ? "" : d.unit}</span></div>
-        {delta != null && delta !== 0 && <div style={{ fontFamily: FONT, fontSize: 11, color: improved ? "#00FF9D" : "#FF4D6D" }}>{delta > 0 ? "▲" : "▼"} {d.fmt === "time" ? `${Math.abs(delta).toFixed(1)} s` : Math.abs(delta).toFixed(1)}</div>}
+    <div className="row">
+      <div className="grow"><div className="body">{d.label}</div><div className="sub l2">Target: {d.target}</div></div>
+      <Spark data={data.map(p => p.value)} color={improved ? "var(--good)" : "var(--label3)"} />
+      <div style={{ textAlign: "right", minWidth: 72 }}>
+        <div className="hl num">{fmt(lastV)}<span className="foot l2" style={{ fontWeight: 400 }}> {d.unit}</span></div>
+        {delta != null && delta !== 0 && <div className="foot num" style={{ color: improved ? "var(--good)" : "var(--bad)" }}>{delta > 0 ? "▲" : "▼"} {d.fmt === "time" ? `${Math.abs(delta).toFixed(1)} s` : Math.abs(delta).toFixed(1)}</div>}
       </div>
     </div>
   );
 }
 function Spark({ data, color }) {
-  if (data.length < 2) return <div style={{ width: 56 }} />;
+  if (data.length < 2) return null;
   const min = Math.min(...data), max = Math.max(...data), r = max - min || 1;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * 56},${18 - ((v - min) / r) * 16}`).join(" ");
-  return <svg width="56" height="20" viewBox="0 0 56 20"><polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * 52 + 2},${20 - ((v - min) / r) * 16}`).join(" ");
+  return <svg width="56" height="24" viewBox="0 0 56 24" aria-hidden="true"><polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
-function Bars({ label, data, max, color, fmt, target }) {
+function Bars({ label, data, max, fmt, target, last }) {
   const m = max || Math.max(1, ...data.map(d => d.v));
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontFamily: FONT, fontSize: 12, color: "#999", marginBottom: 6 }}>{label}</div>
-      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 54, position: "relative" }}>
-        {target != null && <div style={{ position: "absolute", left: 0, right: 0, bottom: (target / m) * 40 + 14, borderTop: "1px dashed #444" }} />}
+    <div style={{ marginBottom: last ? 0 : 18 }}>
+      <div className="sub l2" style={{ marginBottom: 8 }}>{label}</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 76, position: "relative" }}>
+        {target != null && <div style={{ position: "absolute", left: 0, right: 0, bottom: (target / m) * 50 + 18, borderTop: "1px dashed var(--fill2)" }} />}
         {data.map(d => (
           <div key={d.w} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
-            <div style={{ fontFamily: FONT, fontSize: 9, color: "#888" }}>{d.v ? fmt(d.v) : ""}</div>
-            <div style={{ width: "100%", height: Math.max(2, (d.v / m) * 40), background: d.v ? color : "#222", borderRadius: 3 }} />
-            <div style={{ fontFamily: FONT, fontSize: 9, color: "#666", marginTop: 2 }}>W{d.w}</div>
+            <div className="cap l2 num">{d.v ? fmt(d.v) : ""}</div>
+            <div style={{ width: "100%", maxWidth: 36, height: Math.max(3, (d.v / m) * 50), background: d.v ? "var(--tint)" : "var(--fill)", borderRadius: 4, marginTop: 2 }} />
+            <div className="cap l3 num" style={{ marginTop: 4 }}>W{d.w}</div>
           </div>
         ))}
       </div>
     </div>
   );
 }
-function KCard({ label, value, sub, color }) {
-  return (
-    <div style={{ background: "#131313", borderRadius: 12, padding: "12px 12px", border: `1px solid ${color}33` }}>
-      <div style={{ fontSize: 10, letterSpacing: 1.5, color: "#888", fontFamily: FONT, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 900, color, lineHeight: 1.1, marginTop: 4 }}>{value}</div>
-      <div style={{ fontFamily: FONT, fontSize: 11, color: "#777", marginTop: 2 }}>{sub}</div>
-    </div>
-  );
-}
 
-// ── Modals ─────────────────────────────────────────────────
+// ── Sheets ─────────────────────────────────────────────────
 function Sheet({ title, sub, onClose, children }) {
+  useEffect(() => {
+    const onKey = e => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#000000cc", zIndex: 100, display: "flex", alignItems: "flex-end" }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 480, margin: "0 auto", background: "#141414", borderRadius: "20px 20px 0 0", padding: "22px 20px 36px", border: "1px solid #ffffff0a", maxHeight: "88vh", overflowY: "auto" }} className="fu">
-        <div style={{ fontSize: 22, fontWeight: 900 }}>{title}</div>
-        {sub && <div style={{ fontFamily: FONT, fontSize: 13, color: "#888", marginTop: 2, marginBottom: 14 }}>{sub}</div>}
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}>
+        <div className="grabber" />
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ paddingTop: 6 }}><h2 className="t3">{title}</h2>{sub && <div className="sub l2" style={{ marginTop: 2 }}>{sub}</div>}</div>
+          <button className="iconbtn" aria-label="Close" onClick={onClose} style={{ color: "var(--label2)" }}><X size={20} /></button>
+        </div>
         {children}
       </div>
     </div>
   );
 }
-const inp = { width: "100%", background: "#222", border: "1px solid #333", borderRadius: 10, padding: "11px 12px", color: "#fff", fontSize: 16, outline: "none", marginBottom: 10 };
+function Field({ label, children }) { return <label style={{ display: "block", flex: 1, minWidth: 0 }}><span className="label">{label}</span>{children}</label>; }
+function Seg({ n, value, onChange, labels }) {
+  return (
+    <div className="seg" style={{ gridTemplateColumns: `repeat(${Math.min(n, 5)},1fr)` }}>
+      {Array.from({ length: n }, (_, i) => i + 1).map(v => (
+        <button key={v} className={`segbtn num${value === v ? " on" : ""}`} aria-pressed={value === v} onClick={() => onChange(v)}>{labels ? labels[v - 1] : v}</button>
+      ))}
+    </div>
+  );
+}
+function Chips({ options, value, onChange }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      {options.map(o => { const on = value.includes(o); return <button key={o} className={`chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => onChange(on ? value.filter(x => x !== o) : [...value, o])}>{o}</button>; })}
+    </div>
+  );
+}
+function SwitchRow({ on, onClick, label, sub }) {
+  return (
+    <button className="row" role="switch" aria-checked={on} onClick={onClick}>
+      <div className="grow"><div className="body">{label}</div>{sub && <div className="sub l2">{sub}</div>}</div>
+      <span className={`switch${on ? " on" : ""}`} />
+    </button>
+  );
+}
 
-function LogModal({ s, v2, existing, hr, onClose, onSave }) {
-  const m = TYPE_META[s.type];
+function LogSheet({ s, v2, existing, hr, onClose, onSave }) {
   const lifts = s.blocks.filter(b => b.ex);
-  const lastLift = ex => {
-    const ls = Object.values(v2.logs).filter(l => l?.lifts?.[ex]).sort((a, b) => b.date.localeCompare(a.date));
-    return ls[0]?.lifts[ex];
-  };
+  const lastLift = ex => Object.values(v2.logs).filter(l => l?.lifts?.[ex]).sort((a, b) => b.date.localeCompare(a.date))[0]?.lifts[ex];
   const [min, setMin] = useState(existing?.min ?? s.minutes);
   const [rpe, setRpe] = useState(existing?.rpe ?? s.rpe);
   const [power, setPower] = useState(existing?.power ?? "");
@@ -611,66 +813,91 @@ function LogModal({ s, v2, existing, hr, onClose, onSave }) {
   const [pain, setPain] = useState(existing?.pain ?? []);
   const [lv, setLv] = useState(() => Object.fromEntries(lifts.map(b => [b.ex, existing?.lifts?.[b.ex] || lastLift(b.ex) || { w: "", r: "" }])));
   return (
-    <Sheet title="LOG SESSION" sub={s.title} onClose={onClose}>
+    <Sheet title="Log session" sub={s.title} onClose={onClose}>
       <div style={{ display: "flex", gap: 10 }}>
-        <Field label="Minutes"><input type="number" inputMode="numeric" value={min} onChange={e => setMin(e.target.value)} style={inp} /></Field>
-        {(s.type === "bike" || s.type === "race") && <Field label="Avg power (W)"><input type="number" inputMode="numeric" value={power} onChange={e => setPower(e.target.value)} style={inp} /></Field>}
-        {s.type === "swim" && <Field label="Distance (m)"><input type="number" inputMode="numeric" value={dist} onChange={e => setDist(e.target.value)} style={inp} /></Field>}
-        {hr && s.type !== "strength" && <Field label="Avg HR"><input type="number" inputMode="numeric" value={hrv} onChange={e => setHr(e.target.value)} style={inp} /></Field>}
+        <Field label="Minutes"><input className="field num" type="number" inputMode="numeric" value={min} onChange={e => setMin(e.target.value)} /></Field>
+        {(s.type === "bike" || s.type === "race") && <Field label="Avg power (W)"><input className="field num" type="number" inputMode="numeric" value={power} onChange={e => setPower(e.target.value)} /></Field>}
+        {s.type === "swim" && <Field label="Distance (m)"><input className="field num" type="number" inputMode="numeric" value={dist} onChange={e => setDist(e.target.value)} /></Field>}
+        {hr && s.type !== "strength" && <Field label="Avg HR"><input className="field num" type="number" inputMode="numeric" value={hrv} onChange={e => setHr(e.target.value)} /></Field>}
       </div>
-      <SLabel>Effort 1–10 · {RPE_LABELS[rpe]}</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(10,1fr)", gap: 4, marginBottom: 14 }}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <button key={n} onClick={() => setRpe(n)} style={{ padding: "9px 0", borderRadius: 6, border: "none", background: rpe === n ? m.color : "#222", color: rpe === n ? "#000" : "#999", fontSize: 15, fontWeight: 700 }}>{n}</button>)}
-      </div>
+      <span className="label">Effort: <b style={{ color: "var(--label)" }}>{rpe}/10 · {RPE_LABELS[rpe]}</b></span>
+      <Seg n={10} value={rpe} onChange={setRpe} />
       {lifts.length > 0 && (
         <>
-          <SLabel>Top set per exercise (kg × reps)</SLabel>
-          {lifts.map(b => (
-            <div key={b.ex} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <div style={{ flex: 1, fontFamily: FONT, fontSize: 13, color: "#ccc", minWidth: 0 }}>{b.name}</div>
-              <input placeholder="kg" type="number" inputMode="decimal" value={lv[b.ex].w} onChange={e => setLv({ ...lv, [b.ex]: { ...lv[b.ex], w: e.target.value } })} style={{ ...inp, width: 64, marginBottom: 0, padding: "8px" }} />
-              <input placeholder={/ s\b/.test(b.reps) ? "sec" : / m\b/.test(b.reps) ? "m" : "reps"} type="number" inputMode="numeric" value={lv[b.ex].r} onChange={e => setLv({ ...lv, [b.ex]: { ...lv[b.ex], r: e.target.value } })} style={{ ...inp, width: 64, marginBottom: 0, padding: "8px" }} />
-            </div>
-          ))}
-          <div style={{ fontFamily: FONT, fontSize: 11, color: "#666", marginBottom: 12 }}>Prefilled from last time. Leave kg empty for bodyweight.</div>
+          <span className="label">Top set per exercise</span>
+          <div className="card">
+            {lifts.map(b => {
+              const unit = / s\b/.test(b.reps) ? "sec" : / m\b/.test(b.reps) ? "m" : "reps";
+              return (
+                <div key={b.ex} className="row">
+                  <div className="grow body" style={{ minWidth: 0 }}>{b.name}</div>
+                  <input aria-label={`${b.name} kg`} placeholder="kg" className="field num" style={{ width: 72, minHeight: 44, padding: "8px 10px", background: "var(--fill)" }} type="number" inputMode="decimal" value={lv[b.ex].w} onChange={e => setLv({ ...lv, [b.ex]: { ...lv[b.ex], w: e.target.value } })} />
+                  <input aria-label={`${b.name} ${unit}`} placeholder={unit} className="field num" style={{ width: 72, minHeight: 44, padding: "8px 10px", background: "var(--fill)" }} type="number" inputMode="numeric" value={lv[b.ex].r} onChange={e => setLv({ ...lv, [b.ex]: { ...lv[b.ex], r: e.target.value } })} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="foot l2" style={{ margin: "6px 4px 0" }}>Prefilled from last time. Leave kg empty for bodyweight.</div>
         </>
       )}
-      <SLabel>Any pain? (not muscle burn)</SLabel>
-      <Chips options={PAIN_AREAS} value={pain} onChange={setPain} color="#FF4D6D" />
-      <textarea placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} rows={2} style={{ ...inp, resize: "none", fontSize: 14, marginTop: 10 }} />
-      <button onClick={() => onSave({
+      <span className="label">Any pain? (not muscle burn)</span>
+      <Chips options={PAIN_AREAS} value={pain} onChange={setPain} />
+      <span className="label">Notes</span>
+      <textarea className="field" rows={2} value={notes} onChange={e => setNotes(e.target.value)} style={{ resize: "none" }} placeholder="Optional" />
+      <button className="btn btn-primary" style={{ width: "100%", marginTop: 20 }} onClick={() => onSave({
         status: "done", min: Number(min) || s.minutes, rpe, power, hr: hrv, dist, notes, pain, date: existing?.date,
         lifts: Object.fromEntries(Object.entries(lv).filter(([, v]) => v.r !== "" && v.r != null)),
-      })} style={{ ...btn(m.color, "#000"), width: "100%", fontSize: 19 }}>SAVE ✓</button>
+      })}>Save</button>
     </Sheet>
   );
 }
 
-function TestModal({ kind, onClose, onSave }) {
-  const fields = TEST_FORMS[kind] || TEST_FORMS.body;
+function PickTestSheet({ onClose, onPick }) {
+  const opts = [["ftp", "FTP", "From the Zwift ramp test", Bike], ["css", "CSS test", "400 m and 200 m times", Waves], ["strength", "Strength rep tests", "Kettlebell and bodyweight", Dumbbell], ["gym", "Gym e1RM tests", "Heavy set of 3–5", Dumbbell], ["mobility", "Mobility tests", "Ankle, hamstring, overhead, squat", Activity], ["body", "Body and blood", "Waist, ferritin, ALT, decoupling", Timer]];
+  return (
+    <Sheet title="Record results" onClose={onClose}>
+      <div className="card" style={{ marginTop: 12 }}>
+        {opts.map(([k, l, s, Icon]) => (
+          <button key={k} className="row ind" onClick={() => onPick(k)}>
+            <div className="iconchip" style={{ background: "var(--fill)", color: "var(--tint)" }}><Icon size={18} /></div>
+            <div className="grow"><div className="body">{l}</div><div className="sub l2">{s}</div></div>
+            <ChevronRight size={18} className="chev" />
+          </button>
+        ))}
+      </div>
+    </Sheet>
+  );
+}
+
+function TestSheet({ kind, onClose, onSave }) {
+  const k = kind || "body";
+  const fields = TEST_FORMS[k] || TEST_FORMS.body;
   const [raw, setRaw] = useState({});
   const [date, setDate] = useState(todayStr());
-  const preview = resultsFromForm(kind || "body", raw);
-  const titles = { ftp: "FTP", css: "CSS TEST", strength: "STRENGTH TESTS", gym: "GYM e1RM TESTS", mobility: "MOBILITY TESTS", body: "MEASUREMENTS" };
+  const preview = resultsFromForm(k, raw);
+  const titles = { ftp: "FTP", css: "CSS test", strength: "Strength tests", gym: "Gym e1RM tests", mobility: "Mobility tests", body: "Measurements" };
+  const has = Object.keys(preview).length > 0;
   return (
-    <Sheet title={`RECORD · ${titles[kind] || "MEASUREMENTS"}`} sub="Leave anything you didn't test empty." onClose={onClose}>
-      <Field label="Date"><input type="date" value={date} onChange={e => setDate(e.target.value)} style={inp} /></Field>
+    <Sheet title={titles[k]} sub="Leave anything you didn't test empty." onClose={onClose}>
+      <Field label="Date"><input className="field" type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
       {fields.map(f => (
         <Field key={f.key} label={f.label}>
-          <input value={raw[f.key] || ""} inputMode={f.time || f.wr ? "text" : "decimal"} placeholder={f.time ? "6:52" : f.wr ? "80 x 5" : ""} onChange={e => setRaw({ ...raw, [f.key]: e.target.value })} style={inp} />
+          <input className="field num" value={raw[f.key] || ""} inputMode={f.time || f.wr ? "text" : "decimal"} placeholder={f.time ? "e.g. 6:52" : f.wr ? "e.g. 80 x 5" : ""} onChange={e => setRaw({ ...raw, [f.key]: e.target.value })} />
         </Field>
       ))}
-      {Object.keys(preview).length > 0 && (
-        <div style={{ background: "#1c1c1c", borderRadius: 10, padding: 10, marginBottom: 12, fontFamily: FONT, fontSize: 13, color: "#ddd" }}>
-          {Object.entries(preview).map(([k, v]) => <div key={k}>{TEST_DEFS[k]?.label}: <b>{TEST_DEFS[k]?.fmt === "time" ? secToMMSS(v) : v}</b> {TEST_DEFS[k]?.unit}</div>)}
+      {has && (
+        <div className="card" style={{ marginTop: 16 }}>
+          {Object.entries(preview).map(([key, v]) => (
+            <div key={key} className="row"><div className="grow body">{TEST_DEFS[key]?.label}</div><div className="hl num">{TEST_DEFS[key]?.fmt === "time" ? secToMMSS(v) : v} <span className="foot l2" style={{ fontWeight: 400 }}>{TEST_DEFS[key]?.unit}</span></div></div>
+          ))}
         </div>
       )}
-      <button disabled={!Object.keys(preview).length} onClick={() => onSave(date, preview)} style={{ ...btn("#FBBF24", "#000"), width: "100%", fontSize: 19, opacity: Object.keys(preview).length ? 1 : 0.4 }}>SAVE RESULTS</button>
+      <button className="btn btn-primary" disabled={!has} style={{ width: "100%", marginTop: 20, opacity: has ? 1 : 0.4 }} onClick={() => onSave(date, preview)}>Save results</button>
     </Sheet>
   );
 }
 
-function CheckinModal({ entry, hr, onClose, onSave }) {
+function CheckinSheet({ entry, hr, onClose, onSave }) {
   const [ready, setReady] = useState(entry.ready || 3);
   const [sleep, setSleep] = useState(entry.sleep ?? "");
   const [rhr, setRhr] = useState(entry.rhr ?? "");
@@ -679,82 +906,44 @@ function CheckinModal({ entry, hr, onClose, onSave }) {
   const [mobility, setMobility] = useState(!!entry.mobility);
   const [pain, setPain] = useState(entry.pain || []);
   return (
-    <Sheet title="DAILY CHECK-IN" sub="Morning: readiness, sleep, HR, weight. Evening: tick protein and mobility." onClose={onClose}>
-      <SLabel>Readiness</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6, marginBottom: 6 }}>
-        {[1, 2, 3, 4, 5].map(n => <button key={n} onClick={() => setReady(n)} style={{ padding: "10px 0", borderRadius: 8, border: "none", background: ready === n ? "#A78BFA" : "#222", color: ready === n ? "#000" : "#999", fontSize: 16, fontWeight: 700 }}>{n}</button>)}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FONT, fontSize: 11, color: "#666", marginBottom: 12 }}><span>wrecked</span><span>ready to go</span></div>
+    <Sheet title="Daily check-in" sub="Morning: readiness, sleep, weight. Evening: tick protein and mobility." onClose={onClose}>
+      <span className="label">How ready do you feel? <b style={{ color: "var(--label)" }}>{ready}/5</b></span>
+      <Seg n={5} value={ready} onChange={setReady} />
+      <div className="foot l2" style={{ display: "flex", justifyContent: "space-between", margin: "6px 4px 0" }}><span>1 · wrecked</span><span>5 · ready to go</span></div>
       <div style={{ display: "flex", gap: 10 }}>
-        <Field label="Sleep (h)"><input type="number" inputMode="decimal" value={sleep} onChange={e => setSleep(e.target.value)} style={inp} /></Field>
-        <Field label="Weight (kg)"><input type="number" inputMode="decimal" value={weight} onChange={e => setWeight(e.target.value)} style={inp} /></Field>
-        {hr && <Field label="Resting HR"><input type="number" inputMode="numeric" value={rhr} onChange={e => setRhr(e.target.value)} style={inp} /></Field>}
+        <Field label="Sleep (hours)"><input className="field num" type="number" inputMode="decimal" value={sleep} onChange={e => setSleep(e.target.value)} /></Field>
+        <Field label="Weight (kg)"><input className="field num" type="number" inputMode="decimal" value={weight} onChange={e => setWeight(e.target.value)} /></Field>
+        {hr && <Field label="Resting HR"><input className="field num" type="number" inputMode="numeric" value={rhr} onChange={e => setRhr(e.target.value)} /></Field>}
       </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <Toggle on={protein} onClick={() => setProtein(!protein)}>Protein 160 g</Toggle>
-        <Toggle on={mobility} onClick={() => setMobility(!mobility)}>Mobility 10</Toggle>
+      <div className="card" style={{ marginTop: 16 }}>
+        <SwitchRow on={protein} onClick={() => setProtein(!protein)} label="Hit 160 g protein" />
+        <SwitchRow on={mobility} onClick={() => setMobility(!mobility)} label="Did the mobility routine" />
       </div>
-      <SLabel>Pain today?</SLabel>
-      <Chips options={PAIN_AREAS} value={pain} onChange={setPain} color="#FF4D6D" />
-      <button onClick={() => onSave({ ready, sleep: sleep === "" ? null : Number(sleep), rhr: rhr === "" ? null : Number(rhr), weight: weight === "" ? null : Number(weight), protein, mobility, pain })} style={{ ...btn("#A78BFA", "#000"), width: "100%", fontSize: 19, marginTop: 14 }}>SAVE</button>
+      <span className="label">Any pain today?</span>
+      <Chips options={PAIN_AREAS} value={pain} onChange={setPain} />
+      <button className="btn btn-primary" style={{ width: "100%", marginTop: 20 }} onClick={() => onSave({ ready, sleep: sleep === "" ? null : Number(sleep), rhr: rhr === "" ? null : Number(rhr), weight: weight === "" ? null : Number(weight), protein, mobility, pain })}>Save</button>
     </Sheet>
   );
 }
 
-function SettingsModal({ settings, ftp, css, onClose, onSave }) {
+function SettingsSheet({ settings, ftp, css, syncStatus, onClose, onSave }) {
   const [gym, setGym] = useState(settings.gym);
   const [hr, setHr] = useState(settings.hr);
   const [bloodTest, setBloodTest] = useState(settings.bloodTest || "");
   return (
-    <Sheet title="SETTINGS" sub={`Current FTP ${ftp ? ftp + " W" : "not set"} · CSS ${secToMMSS(css)}/100m (from tests)`} onClose={onClose}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        <Toggle on={gym} onClick={() => setGym(!gym)} wide>Gym access from January 2027</Toggle>
-        <Toggle on={hr} onClick={() => setHr(!hr)} wide>I have a heart rate strap or watch</Toggle>
+    <Sheet title="Settings" onClose={onClose}>
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="row"><div className="grow body">FTP</div><div className="body l2 num">{ftp ? `${ftp} W` : "Not tested yet"}</div></div>
+        <div className="row"><div className="grow body">CSS</div><div className="body l2 num">{secToMMSS(css)} /100 m</div></div>
+        <div className="row"><div className="grow body">Sync</div><SyncDot status={syncStatus} /></div>
       </div>
-      <Field label="Next blood test date (no lifting or intervals 5 days before)"><input type="date" value={bloodTest} onChange={e => setBloodTest(e.target.value)} style={inp} /></Field>
-      <div style={{ fontFamily: FONT, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 14 }}>Without gym access, the gym sessions switch to the harder kettlebell sessions; you'll hit a ceiling at 20 kg.</div>
-      <button onClick={() => onSave({ gym, hr, bloodTest })} style={{ ...btn("#fff", "#000"), width: "100%", fontSize: 19 }}>SAVE</button>
+      <div className="foot l2" style={{ margin: "6px 16px 0" }}>FTP and CSS update from your test results.</div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <SwitchRow on={gym} onClick={() => setGym(!gym)} label="Gym access" sub="From January 2027. Off = kettlebell versions" />
+        <SwitchRow on={hr} onClick={() => setHr(!hr)} label="Heart rate strap or watch" sub="Adds heart rate fields" />
+      </div>
+      <Field label="Next blood test (no lifting or intervals 5 days before)"><input className="field" type="date" value={bloodTest} onChange={e => setBloodTest(e.target.value)} /></Field>
+      <button className="btn btn-primary" style={{ width: "100%", marginTop: 20 }} onClick={() => onSave({ gym, hr, bloodTest })}>Save</button>
     </Sheet>
   );
-}
-
-// ── Small UI pieces ────────────────────────────────────────
-function btn(bg, fg) { return { padding: "14px 14px", background: bg, border: bg === "#1e1e1e" ? "1px solid #333" : "none", borderRadius: 12, fontSize: 14, fontWeight: 800, color: fg, letterSpacing: 1 }; }
-function Badge({ color, children }) { return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 6, padding: "2px 7px", fontSize: 11, fontFamily: FONT, fontWeight: 600, whiteSpace: "nowrap" }}>{children}</span>; }
-function Note({ color, children }) { return <div style={{ marginTop: 10, background: color + "14", border: `1px solid ${color}44`, borderRadius: 10, padding: "10px 12px", fontFamily: FONT, fontSize: 13, color: "#e8e8e8", lineHeight: 1.45 }}>{children}</div>; }
-function NavBtn({ disabled, onClick, children }) { return <button disabled={disabled} onClick={onClick} style={{ width: 34, height: 54, borderRadius: 8, background: "#1a1a1a", border: "1px solid #2a2a2a", color: disabled ? "#333" : "#fff", fontSize: 16, flexShrink: 0, alignSelf: "flex-end" }}>{children}</button>; }
-function SLabel({ children, color = "#888" }) { return <div style={{ fontSize: 11, letterSpacing: 2.5, color, fontFamily: FONT, textTransform: "uppercase", marginBottom: 8 }}>{children}</div>; }
-function Field({ label, children }) { return <label style={{ display: "block", flex: 1, minWidth: 0 }}><div style={{ fontFamily: FONT, fontSize: 11, color: "#888", marginBottom: 4 }}>{label}</div>{children}</label>; }
-function Line({ children }) { return <div style={{ fontFamily: FONT, fontSize: 13, color: "#c8c8c8", padding: "4px 0" }}>{children}</div>; }
-function Row({ name, right }) {
-  return (
-    <div style={{ padding: "7px 0", borderBottom: "1px solid #1e1e1e" }}>
-      <div style={{ fontFamily: FONT, fontSize: 13, color: "#e0e0e0", fontWeight: 600 }}>{name}</div>
-      <div style={{ fontFamily: FONT, fontSize: 12, color: "#999" }}>{right}</div>
-    </div>
-  );
-}
-function Collapse({ title, children }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div style={{ marginTop: 10 }}>
-      <button onClick={() => setOpen(!open)} style={{ width: "100%", padding: "12px 14px", background: "#161616", border: "1px solid #2a2a2a", borderRadius: open ? "10px 10px 0 0" : 10, color: "#bbb", fontSize: 14, fontFamily: FONT, display: "flex", justifyContent: "space-between" }}>
-        <span>{title}</span><span style={{ fontSize: 10 }}>{open ? "▲" : "▼"}</span>
-      </button>
-      {open && <div style={{ background: "#111", borderRadius: "0 0 10px 10px", padding: "8px 14px 12px", border: "1px solid #2a2a2a", borderTop: "none" }}>{children}</div>}
-    </div>
-  );
-}
-function Chips({ options, value, onChange, color }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-      {options.map(o => {
-        const on = value.includes(o);
-        return <button key={o} onClick={() => onChange(on ? value.filter(x => x !== o) : [...value, o])} style={{ padding: "7px 11px", borderRadius: 18, border: `1px solid ${on ? color : "#333"}`, background: on ? color + "22" : "#1a1a1a", color: on ? color : "#999", fontFamily: FONT, fontSize: 13 }}>{o}</button>;
-      })}
-    </div>
-  );
-}
-function Toggle({ on, onClick, children, wide }) {
-  return <button onClick={onClick} style={{ flex: wide ? undefined : 1, width: wide ? "100%" : undefined, textAlign: "left", padding: "11px 12px", borderRadius: 10, border: `1px solid ${on ? "#00FF9D" : "#333"}`, background: on ? "#00FF9D18" : "#1a1a1a", color: on ? "#00FF9D" : "#999", fontFamily: FONT, fontSize: 14 }}>{on ? "✓ " : "○ "}{children}</button>;
 }
