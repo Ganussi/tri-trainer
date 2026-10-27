@@ -11,15 +11,31 @@ import {
 const SUPABASE_URL = "https://lsnqafebaimgdjskiqbo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IwLZUcY--VQcy1qA_iQgtg_Rq938y_C";
 
+// Returns the stored data, {} when the row is empty, or undefined when Supabase can't be reached
+// (offline, or the project is paused).
 async function dbLoad() {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/tri_trainer?id=eq.singleton&select=data`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
     });
+    if (!r.ok) return undefined;
     const rows = await r.json();
-    if (rows && rows[0] && rows[0].data && Object.keys(rows[0].data).length > 0) return rows[0].data;
-  } catch {}
-  return null;
+    if (!Array.isArray(rows)) return undefined;
+    return rows[0]?.data || {};
+  } catch { return undefined; }
+}
+// Merge two copies of the store so nothing logged on either side is lost.
+function mergeStores(remote = {}, local = {}) {
+  const r = remote.v2 || {}, l = local.v2 || {};
+  const daily = { ...(r.daily || {}) };
+  Object.entries(l.daily || {}).forEach(([d, e]) => { daily[d] = { ...(daily[d] || {}), ...e }; });
+  const tests = [...(r.tests || [])];
+  (l.tests || []).forEach(t => { if (!tests.some(x => x.id === t.id)) tests.push(t); });
+  return {
+    ...remote, ...local,
+    logs: remote.logs || local.logs, currentDay: remote.currentDay ?? local.currentDay, benchmarks: remote.benchmarks || local.benchmarks,
+    v2: { ...r, ...l, logs: { ...(r.logs || {}), ...(l.logs || {}) }, daily, tests, settings: { ...(r.settings || {}), ...(l.settings || {}) } },
+  };
 }
 async function dbSave(data) {
   try {
@@ -44,14 +60,20 @@ export default function App() {
   const [store, setStore] = useState({});
   const [syncStatus, setSyncStatus] = useState("loading");
   const saveTimer = useRef(null);
+  const remoteOk = useRef(false); // never write to Supabase until we've read it, so a paused/offline start can't wipe it
 
   useEffect(() => {
     (async () => {
+      let local = null;
+      try { local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null"); } catch {}
       const remote = await dbLoad();
-      let data = remote;
-      if (!data) { try { data = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null"); } catch {} }
-      setStore(data || {});
-      setSyncStatus(remote ? "synced" : "offline");
+      if (remote === undefined) { setStore(local || {}); setSyncStatus("offline"); return; }
+      remoteOk.current = true;
+      const merged = local ? mergeStores(remote, local) : remote;
+      setStore(merged);
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(merged)); } catch {}
+      if (JSON.stringify(merged) !== JSON.stringify(remote)) { const ok = await dbSave(merged); setSyncStatus(ok ? "synced" : "offline"); }
+      else setSyncStatus("synced");
     })();
   }, []);
 
@@ -64,7 +86,18 @@ export default function App() {
       try { localStorage.setItem(LOCAL_KEY, JSON.stringify(next)); } catch {}
       setSyncStatus("saving");
       clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(async () => { const ok = await dbSave(next); setSyncStatus(ok ? "synced" : "offline"); }, 1000);
+      saveTimer.current = setTimeout(async () => {
+        let payload = next;
+        if (!remoteOk.current) {
+          const remote = await dbLoad();
+          if (remote === undefined) { setSyncStatus("offline"); return; }
+          remoteOk.current = true;
+          payload = mergeStores(remote, next);
+          setStore(payload);
+          try { localStorage.setItem(LOCAL_KEY, JSON.stringify(payload)); } catch {}
+        }
+        const ok = await dbSave(payload); setSyncStatus(ok ? "synced" : "offline");
+      }, 1000);
       return next;
     });
   }

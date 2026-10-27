@@ -87,7 +87,7 @@ export const PHASES = [
     id: "winter", name: "Winter Strength", from: 29, to: 42, season: "Winter", color: "#FF6B35",
     goal: "Get strong: 3 gym sessions a week in 4-week waves, while the long ride grows to 3 hours so you start the W2W build with a base.",
     template: "Gym 3 · Bike 2 · Swim 2 · ~7–8.5 h (above your 6–7 h)",
-    why: "You arrive already lifting heavy, so winter builds on summer instead of starting over. Endurance holds on 2 rides a week while one keeps its intensity; the Saturday ride grows from 2 to 3 hours by August. Heavy legs and bike intervals sit on different days. Late-winter weeks with a 3-hour ride run about 8 hours.",
+    why: "You arrive already lifting heavy, so winter builds on summer instead of starting over. Monday's swim becomes a short quality session (4 × 100 at CSS or 8 × 50 fast), giving two quality swims a week. Endurance holds on 2 rides a week while one keeps its intensity; the Saturday ride grows from 2 to 3 hours by August. Heavy legs and bike intervals sit on different days. Late-winter weeks with a 3-hour ride run about 8 hours.",
   },
   {
     id: "w2w", name: "W2W Build", from: 43, to: 53, season: "Spring", color: "#00FF9D",
@@ -200,8 +200,8 @@ function lift(key, sets, reps, rest, extra = {}) {
 }
 const div = label => ({ divider: true, name: label });
 
-const KB_WARMUP = { name: "Warm-up · 6–8 min", detail: "2 min marching or jumping jacks · 10 BW squats · 10 hip hinges · 10 arm circles each way · 5 inchworms · 10 light swings + 5 goblet squats (16 kg)" };
-const GYM_WARMUP = { name: "Warm-up · 8–10 min", detail: "5 min easy bike or row · 10 BW squats · 10 hip hinges · band pull-aparts × 15 · then 2–4 ramp-up sets on the first lift" };
+const KB_WARMUP = { name: "Warm-up · 6–8 min", detail: "2 min marching or jumping jacks · 10 BW squats · 10 hip hinges · 10 arm circles each way · 5 inchworms · 10 light swings + 5 goblet squats (16 kg) · band external rotations 2 × 15 per arm, elbow at your side (shoulder health for swimming)" };
+const GYM_WARMUP = { name: "Warm-up · 8–10 min", detail: "5 min easy bike or row · 10 BW squats · 10 hip hinges · band pull-aparts × 15 · band or cable external rotations 2 × 15 per arm · then 2–4 ramp-up sets on the first lift" };
 
 // ── Strength generators ─────────────────────────────────────
 function kbA(sets) {
@@ -349,16 +349,20 @@ const FLY_FULL = [null, "Full fly 4 × 25 · 30–45 s rest", "Full fly 6 × 25 
 const IM_BLOCK = [null, "2 × 100 IM easy (25 each) · 30 s rest", "4 × 100 IM steady · 30 s rest", "200 IM steady + 4 × 50 (fly/back/breast/free) Z3 · 30 s rest"];
 
 function swimTech(slot, w, { main, flyLvl = 0, minutes = 50, rpe = 4, hardMin = 0, extraBlocks = [], dist }) {
-  const stroke = STROKES[(w - 1) % 3];
-  const flyNote = stroke.key === "fly" ? (FLY_FULL[flyLvl] ? [{ name: "Butterfly full stroke", detail: FLY_FULL[flyLvl] }] : [{ name: "Butterfly", detail: "Drills only this phase. Full stroke comes later." }]) : [];
+  // Every technique swim touches all three strokes: short, frequent practice beats one stroke every third week.
+  const backDrill = ["Kick on back, no board", "3-stroke / 6-kick"][w % 2];
+  const flyDrill = ["Dolphin kick on front, arms by sides", "Dolphin kick on back", "Single-arm fly", "Body dolphin, no arms"][w % 4];
   return {
-    slot, type: "swim", title: `Technique · Freestyle + ${stroke.name}`, minutes, rpe, hardMin, stroke: stroke.name, cues: stroke.cues,
+    slot, type: "swim", title: "Technique · all strokes", minutes, rpe, hardMin, stroke: "All strokes",
+    cues: ["Back: ears in, rotate hips to the pulling side", "Breast: pull → breathe → kick → glide; ease into the kick", "Fly: two kicks per arm cycle, breathe late and low", "Fly: shoulders hurt? Back to drills"],
     blocks: [
       { name: "Warm-up", detail: "200 m Z1 mixed strokes · 15 s rest" },
       { name: "Freestyle drills 4 × 50", detail: "Catch-up / fingertip drag / 6-1-6 / swim · 15 s rest" },
-      div(stroke.name),
-      ...stroke.drills.map(d => ({ name: d.split(" · ")[0], detail: `${d.split(" · ")[1]} · 15 s rest` })),
-      ...flyNote,
+      div("Strokes"),
+      { name: `Backstroke · ${backDrill}`, detail: "2 × 25 drill + 2 × 25 swim · 15 s rest" },
+      { name: "Breaststroke · 2-kick / 1-pull", detail: "2 × 25 drill + 2 × 25 swim · 15 s rest" },
+      { name: `Butterfly · ${flyDrill}`, detail: "2 × 25 drill · 15 s rest" },
+      ...(FLY_FULL[flyLvl] ? [{ name: "Butterfly full stroke", detail: FLY_FULL[flyLvl] }] : [{ name: "Butterfly full stroke", detail: "Not yet: drills only this phase" }]),
       div("Main"),
       ...main,
       ...extraBlocks,
@@ -479,6 +483,22 @@ function mondaySwim(optional = false) {
   };
 }
 
+// Winter Monday swim: short but with real intensity (the only extra quality swim of the week)
+function mondayQuality(w) {
+  const css = w % 2 === 1;
+  return {
+    slot: "Mon", type: "swim", title: css ? "Quality swim · 4 × 100 at CSS" : "Quality swim · 8 × 50 fast", minutes: 30, rpe: 6, hardMin: css ? 8 : 6,
+    blocks: [
+      { name: "Warm-up", detail: "300 m Z1 mixed + 4 × 25 build · 15 s rest" },
+      css ? { name: "4 × 100 free", detail: "Z3 at CSS pace · 15 s rest. Same split every rep" } : { name: "8 × 50 free", detail: "Z4 fast · 30 s rest. Long strokes, no thrashing" },
+      { name: "Easy 100", detail: "Z1 backstroke" },
+      { name: "Cool-down", detail: "100 m Z1" },
+    ],
+    notes: ["Swim after the gym session, or later in the day. Upper body only gets a light load from the lifting."],
+  };
+}
+const FILM_WEEKS = [3, 11, 16, 20, 40, 46];
+
 export function buildWeek(w, ctx = {}) {
   const ftp = ctx.ftp || null;
   const gym = ctx.gym !== false;
@@ -583,7 +603,7 @@ export function buildWeek(w, ctx = {}) {
       }[w]);
       s.push(swimAerobic("Wed", {
         imLvl: reduced || w === 25 ? 1 : 2, title: w === 25 ? "Easy swim · 30 min" : "Swim · technique + aerobic",
-        main: w === 25 ? [z2x(4)] : [{ name: "Drill set 4 × 50", detail: `${["Backstroke", "Breaststroke", "Butterfly"][(w - 1) % 3]} focus · 15 s rest (fly: full stroke 4 × 25 allowed)` }, z3x(reduced ? 4 : 8)],
+        main: w === 25 ? [z2x(4)] : [{ name: "Stroke drills 6 × 25", detail: "2 back, 2 breast, 2 fly drill · 15 s rest. Then full fly 4 × 25 · 30–45 s rest" }, z3x(reduced ? 4 : 8)],
         minutes: w === 25 ? 30 : 50, hardMin: reduced || w === 25 ? 0 : 12, rpe: 5,
       }));
       if (w !== 25) s.push(gym ? strengthSession("Thu", "Gym · power + single-leg", gymPower(sets), 45, 6) : strengthSession("Thu", "Strength B+ (maintenance)", kbBplus(sets), 35, 7));
@@ -609,7 +629,7 @@ export function buildWeek(w, ctx = {}) {
   else if (w <= 42) {
     const SCHEME = { 29: [3, "6", "RIR 3"], 30: [4, "6", "RIR 2"], 31: [4, "5", "RIR 2"], 32: [2, "5", "RIR 4"], 33: [4, "6", "RIR 2"], 34: [4, "5", "RIR 2"], 35: [5, "4", "RIR 1–2"], 36: [2, "5", "RIR 4"], 37: [4, "6", "RIR 2"], 38: [4, "5", "RIR 2"], 39: [5, "4", "RIR 1–2"], 41: [4, "5", "RIR 2"], 42: [5, "4", "RIR 1–2"] };
     const deload = t === "deload";
-    s.push(mondaySwim());
+    s.push(deload || w === 40 ? mondaySwim() : mondayQuality(w));
     if (w === 40) {
       s.push(gym ? gymTestSession("Mon") : kbTestSession("Mon"));
       s.push(ftpTest("Tue"));
@@ -695,7 +715,16 @@ export function buildWeek(w, ctx = {}) {
     s = buildWeek([14, 15, 14, 16][(w - 54) % 4], ctx).map(x => ({ ...x }));
   }
 
-  s = s.filter(Boolean).sort((a, b) => DAYS.indexOf(a.slot) - DAYS.indexOf(b.slot));
+  if (FILM_WEEKS.includes(w)) {
+    const sw = s.find(x => x && x.test === "css") || s.find(x => x && x.type === "swim");
+    if (sw) sw.notes = [...(sw.notes || []), "Test week: film 2 × 25 free and 25 of each stroke, side-on and head-on. Compare with last time: head position, hip height, catch."];
+  }
+  if (w === 10 || w === 11) {
+    const sw = s.find(x => x && x.type === "swim");
+    if (sw) sw.notes = [...(sw.notes || []), "Book one or two coached technique sessions this month if you can: for adult swimmers, feedback beats extra metres."];
+  }
+  const SAME_DAY = ["test", "strength", "swim", "bike", "run", "race"]; // lift before the easy swim; tests before the ride
+  s = s.filter(Boolean).sort((a, b) => DAYS.indexOf(a.slot) - DAYS.indexOf(b.slot) || SAME_DAY.indexOf(a.type) - SAME_DAY.indexOf(b.type));
   s.forEach((x, i) => { x.id = `w${w}-${i}`; x.week = w; });
   return s;
 }
@@ -719,6 +748,7 @@ export const RESEARCH_NOTES = [
   { title: "Sleep rule", text: "Sleep loss impairs endurance performance, strength and recovery (Fullagar et al. 2015). Under 6 hours of sleep or readiness 2 or lower: today's hard session becomes easy, or rest." },
   { title: "Mobility: useful, not magic", text: "Full-range strength training improves range of motion about as much as stretching (Afonso et al. 2021). Evidence that mobility routines prevent injury is weak, so the 10-minute routine is a 3-days-a-week extra, not a core session." },
   { title: "Holiday running", text: "Novice runners who increase weekly distance by more than about 30% get more distance-related injuries (Nielsen et al. 2014), so the holiday runs grow about 10% a week. A month off the bike costs some VO2max and power (Mujika & Padilla 2000); running keeps much of the general aerobic fitness." },
+  { title: "Swimming", text: "CSS from a 400 + 200 test tracks threshold pace well (Wakayoshi et al. 1992), so all swim zones come from it. Every technique swim touches all three strokes, because short, frequent practice beats occasional blocks for skill learning. Band external rotations protect the shoulder as butterfly comes in, and filming your stroke each test week gives the feedback extra metres can't." },
   { title: "Taper", text: "Cutting volume ~40–60% over 1–2 weeks while keeping intensity gives the best race-day performance (Bosquet et al. 2007)." },
   { title: "Load and progression", text: "Session effort (1–10) × minutes is a validated way to track training load (Foster et al. 2001). Avoid big week-to-week jumps; the app flags a week more than 20% above your recent average." },
 ];
