@@ -200,30 +200,37 @@ function lift(key, sets, reps, rest, extra = {}) {
 }
 const div = label => ({ divider: true, name: label });
 
-const KB_WARMUP = { name: "Warm-up · 6–8 min", detail: "2 min marching or jumping jacks · 10 BW squats · 10 hip hinges · 10 arm circles each way · 5 inchworms · 10 light swings + 5 goblet squats (16 kg) · band external rotations 2 × 15 per arm, elbow at your side (shoulder health for swimming)" };
+// Early-morning KB warm-up (~8 min). Steps 3–4 are the non-negotiable part.
+const KB_WARMUP = [
+  div("Warm-up · ~8 min · steps 3–4 are non-negotiable"),
+  { name: "1 · Get warm · 2 min", detail: "Jumping jacks, marching or skipping until you're breathing a bit harder" },
+  { name: "2 · Loosen up · 2 min", detail: "Cat-cow × 8 · world's greatest stretch × 3 / side · BW good mornings × 10 (cut this step if short on time)" },
+  { name: "3 · Activate · 3 min", detail: "Dead bugs 2 × 6 / side, low back pressed down · glute bridges × 10 · band external rotations 2 × 15 per arm, elbow at your side (shoulder health for swimming)" },
+  { name: "4 · Ramp · 1–2 min", detail: "16 kg: 10 easy swings + 5 goblet squats, then the first working set. If that first set still feels awful, treat it as a sleep/recovery signal (sleep rule)" },
+];
 const GYM_WARMUP = { name: "Warm-up · 8–10 min", detail: "5 min easy bike or row · 10 BW squats · 10 hip hinges · band pull-aparts × 15 · band or cable external rotations 2 × 15 per arm · then 2–4 ramp-up sets on the first lift" };
 
 // ── Strength generators ─────────────────────────────────────
 function kbA(sets) {
-  return [KB_WARMUP, div("Main"),
+  return [...KB_WARMUP, div("Main"),
     lift("goblet", sets, "8–12", "90 s"), lift("kbrdl", sets, "10–12", "90 s"),
     lift("pushup", sets, "6–15", "90 s"), lift("ringrow", sets, "8–12", "90 s"),
     lift("farmer", sets, "40 m", "60 s"), lift("plank", sets, "30–45 s", "60 s")];
 }
 function kbB(sets) {
-  return [KB_WARMUP, div("Main"),
+  return [...KB_WARMUP, div("Main"),
     lift("swing", sets + 2, "15", "60 s"), lift("revlunge", sets, "8 / leg", "90 s"),
     lift("kbrow", sets, "10 / arm", "60 s"), lift("hkpress", sets, "6–10 / arm", "90 s"),
-    lift("bridge", sets, "15", "60 s"), lift("deadbug", sets, "8 / side", "60 s")];
+    lift("bridge", sets, "15", "60 s")]; // dead bugs moved into the warm-up
 }
 function kbAplus(sets) {
-  return [KB_WARMUP, div("Power"), lift("jump", 3, "3", "90 s"), div("Main"),
+  return [...KB_WARMUP, div("Power"), lift("jump", 3, "3", "90 s"), div("Main"),
     lift("rfess", sets, "6–10 / leg", "2 min"), lift("slrdl", sets, "6–10 / leg", "90 s"),
     lift("ringpush", sets, "6–12", "2 min"), lift("ringpull", sets + 1, "3–8", "2 min"),
     lift("suitcase", sets, "30 m / side", "60 s"), lift("sideplank", 2, "30–45 s / side", "45 s")];
 }
 function kbBplus(sets) {
-  return [KB_WARMUP, div("Main"),
+  return [...KB_WARMUP, div("Main"),
     lift("swing1", sets * 2, "10 (EMOM)", "rest of minute"), lift("tgu", sets, "2 / side", "as needed"),
     lift("hkpress20", sets, "5–8 / arm", "90 s"), lift("kbrowpause", sets, "8–12 / arm", "60 s"),
     lift("slbridge", sets, "10 / leg", "60 s"), lift("copenhagen", 2, "20 s / side", "45 s"),
@@ -420,7 +427,7 @@ function kbTestSession(slot) {
   return {
     slot, type: "test", test: "strength", title: "Strength rep tests", minutes: 35, rpe: 7, hardMin: 0,
     blocks: [
-      KB_WARMUP,
+      ...KB_WARMUP, div("Tests"),
       { name: "Max strict push-ups", detail: "Chest to a fist from the floor, no sagging. One set." },
       { name: "Max ring pull-ups", detail: "Full hang to chest-to-rings. If 0, max feet-on-chair ring rows." },
       { name: "20 kg goblet squat, 3 s down", detail: "Reps to 1 left in the tank, form intact" },
